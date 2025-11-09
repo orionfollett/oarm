@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 
-int main(int argc, char** argv) {
-  printf("OARM Interpreter\n");
+#define MAX_LINE_LEN 1024
 
+int main(int argc, char** argv) {
   if (argc > 1) {
     if (strcmp("--help", argv[1]) == 0) {
       printf(
@@ -18,11 +18,32 @@ int main(int argc, char** argv) {
           "\n"
           "Options:\n"
           "  --help              Show this help message and exit\n");
+        return 0;
     } else {
-    }
-
-    printf("%s\n", argv[1]);
+        printf("Interpreting from file...");
+        printf("%s\n", argv[1]);
+        /* Change get char to read from file instead of stdin?*/
+    }    
   }
 
+  printf("oarm v0.1\n____\n\n");
+  
+  while(1){
+    printf("> ");
+    char line[MAX_LINE_LEN] = {0};
+    int i = 0;
+    for(; i < MAX_LINE_LEN; i++) {
+        char c = (char)getc(stdin);
+        line[i] = c;
+        if(c == EOF || c == '\n'){
+            break;
+        }
+    } 
+    
+    printf("%s\n", line);
+  }
+  
+  
+  
   return 0;
 }
