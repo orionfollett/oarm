@@ -26,12 +26,12 @@ build(){
 }
 
 runf(){
-    build    
+    build || return
     $BUILD_DIR/$APP "$1"
 }
 
 run(){
-    build    
+    build || return
     $BUILD_DIR/$APP
 }
 
