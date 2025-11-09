@@ -77,7 +77,7 @@ bool tick(char line[MAX_LINE_LEN]) {
     /*Evaluate one line of assembly, update global registers and memory where needed.*/
 
     char cmd_str[3] = {0};
-    memcpy(cmd_str, line, 3);
+    memcpy(cmd_str, line, 3*sizeof(char));
     CMD cmd = identify_cmd(cmd_str);
 
     /* line identified by first three chars */
@@ -90,8 +90,8 @@ bool tick(char line[MAX_LINE_LEN]) {
     else if (cmd==RET){
         printf("RET command detected\n");
     }
-    else if(identify_cmd(cmd_str)==UNKNOWN){
-        printf("Error could not parse statement identifier: %s", cmd_str);
+    else if(cmd==UNKNOWN){
+        printf("Error could not parse statement identifier: %c%c%c\n", cmd_str[0], cmd_str[1], cmd_str[2]);
         return false;
     }
     return true;
