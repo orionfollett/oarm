@@ -11,3 +11,8 @@ Why C?
 - understanding C helps understand most every other language
 - forces me to do everything from scratch, which is a good thing since this is all educational anyways
 
+Project:
+
+Implement a REPL and file reading interpreter that supports a small subset of ARM assembly.
+
+ARM supported:
