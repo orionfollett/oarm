@@ -4,6 +4,8 @@
 #define MAX_LINE_LEN 1024
 
 int main(int argc, char** argv) {
+  FILE* input_stream = stdin;
+
   if (argc > 1) {
     if (strcmp("--help", argv[1]) == 0) {
       printf(
@@ -18,32 +20,32 @@ int main(int argc, char** argv) {
           "\n"
           "Options:\n"
           "  --help              Show this help message and exit\n");
-        return 0;
+      return 0;
     } else {
-        printf("Interpreting from file...");
-        printf("%s\n", argv[1]);
-        /* Change get char to read from file instead of stdin?*/
-    }    
+      input_stream = fopen(argv[1], "r");
+      if (input_stream == NULL) {
+        perror("Error opening file");
+        return 1;
+      }
+    }
   }
 
   printf("oarm v0.1\n____\n\n");
-  
-  while(1){
+
+  while (1) {
     printf("> ");
     char line[MAX_LINE_LEN] = {0};
     int i = 0;
-    for(; i < MAX_LINE_LEN; i++) {
-        char c = (char)getc(stdin);
-        line[i] = c;
-        if(c == EOF || c == '\n'){
-            break;
-        }
-    } 
-    
+    for (; i < MAX_LINE_LEN; i++) {
+      char c = (char)getc(input_stream);
+      line[i] = c;
+      if (c == EOF || c == '\n') {
+        break;
+      }
+    }
+
     printf("%s\n", line);
   }
-  
-  
-  
+
   return 0;
 }
