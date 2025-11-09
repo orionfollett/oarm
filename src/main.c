@@ -7,6 +7,7 @@
 
 #define MAX_LINE_LEN 128
 #define MAX_IDENT_LEN 32
+#define CMD_LEN 3
 #define NUM_REGISTERS 10
 #define MEM_BYTES 4096
 
@@ -38,8 +39,9 @@ typedef struct Args {
 
 /*Declarations*/
 bool tick(char line[MAX_LINE_LEN]);
-CMD identify_cmd(char cmd[3]);
+CMD identify_cmd(char cmd[CMD_LEN]);
 Args parse_args(char line[MAX_LINE_LEN]);
+int parse_int(char num[MAX_IDENT_LEN - CMD_LEN - 1]);
 bool mov(char line[MAX_LINE_LEN]);
 
 /*Implementations*/
@@ -100,8 +102,8 @@ bool tick(char line[MAX_LINE_LEN]) {
   /*Evaluate one line of assembly, update global registers and memory where
    * needed.*/
   bool cont = true;
-  char cmd_str[3] = {0};
-  memcpy(cmd_str, line, 3 * sizeof(char));
+  char cmd_str[CMD_LEN] = {0};
+  memcpy(cmd_str, line, CMD_LEN * sizeof(char));
   CMD cmd = identify_cmd(cmd_str);
 
   /* line identified by first three chars */
@@ -120,7 +122,7 @@ bool tick(char line[MAX_LINE_LEN]) {
   return cont;
 }
 
-CMD identify_cmd(char cmd[3]) {
+CMD identify_cmd(char cmd[CMD_LEN]) {
   if (cmd[0] == 'm') {
     return MOV;
   } else if (cmd[0] == 'a') {
@@ -147,6 +149,18 @@ args are always comma separated
 different commands expect different number of args
 */
 
+int parse_int(char num[MAX_IDENT_LEN - CMD_LEN - 1]){
+    /*Given an array of chars, return an int. Char array must be null terminated.*/
+    int i=0;
+    int result = 0;
+    int digits[MAX_IDENT_LEN] = {0};
+
+    for(; i < MAX_IDENT_LEN; i++){
+        digits[i] =  (int)num[i] - 48;
+    }
+    return result;
+}
+
 Args parse_args(char line[MAX_LINE_LEN]) {
   Args args;
   args.count = 0;
@@ -159,11 +173,18 @@ Args parse_args(char line[MAX_LINE_LEN]) {
       Arg a;
       if (arg_str[0] == '[') {
         a.tag = ADDRESS;
+        a.addr = 1;
+        /*TODO: not implemented yet*/
       } else if (arg_str[0] == 'x') {
         a.tag = REGISTER;
+        a.reg = 1;
+        
       } else if (arg_str[0] == '#') {
         a.tag = CONSTANT;
+        a.constant = 1;
       } else {
+        args.is_valid=false;
+        return args;
       }
 
       args.args[args.count] = a;
