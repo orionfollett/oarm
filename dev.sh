@@ -16,13 +16,15 @@ CFLAGS=(
     -std=c89
     -O2
 )
+APP=oarm
+BUILD_DIR=build
 
 build(){
-    mkdir -p build
-    $CC $CFLAGS src/main.c -o build/app
+    mkdir -p $BUILD_DIR
+    $CC $CFLAGS src/main.c -o $BUILD_DIR/$APP
 }
 
 run(){
     build    
-    ./build/app "$1"
+    $BUILD_DIR/$APP "$1"
 }
