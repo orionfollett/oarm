@@ -18,6 +18,7 @@ CFLAGS=(
 )
 APP=oarm
 BUILD_DIR=build
+SRC_DIR=src
 
 build(){
     mkdir -p $BUILD_DIR
@@ -27,4 +28,8 @@ build(){
 run(){
     build    
     $BUILD_DIR/$APP "$1"
+}
+
+fmt() {
+    clang-format --style Chromium -i $SRC_DIR/*.c 2>/dev/null || true
 }
