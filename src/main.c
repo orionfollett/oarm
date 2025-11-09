@@ -5,7 +5,8 @@
 #define true 1
 #define false 0
 
-#define MAX_LINE_LEN 1024
+#define MAX_LINE_LEN 128
+#define MAX_IDENT_LEN 32
 #define NUM_REGISTERS 10
 #define MEM_BYTES 4096
 
@@ -14,11 +15,32 @@ int registers[NUM_REGISTERS] = {0};
 int memory[MEM_BYTES] = {0};
 
 /*Types*/
-typedef enum {MOV, ADD, RET, UNKNOWN} CMD;
+typedef enum { MOV, ADD, RET, UNKNOWN } CMD;
+typedef int Register;
+typedef int Address;
+
+typedef enum { ADDRESS, REGISTER, CONSTANT } ArgType;
+
+typedef struct Arg {
+  ArgType tag;
+  union {
+    Register reg;
+    Address addr;
+    int constant;
+  };
+} Arg;
+
+typedef struct Args {
+  int count;
+  Arg args[3];
+  bool is_valid;
+} Args;
 
 /*Declarations*/
 bool tick(char line[MAX_LINE_LEN]);
 CMD identify_cmd(char cmd[3]);
+Args parse_args(char line[MAX_LINE_LEN]);
+bool mov(char line[MAX_LINE_LEN]);
 
 /*Implementations*/
 
@@ -50,7 +72,7 @@ int main(int argc, char** argv) {
   }
 
   printf("oarm v0.1\n____\n\n");
-  
+
   bool cont = true;
   while (cont) {
     printf("> ");
@@ -58,10 +80,11 @@ int main(int argc, char** argv) {
     int i = 0;
     for (; i < MAX_LINE_LEN; i++) {
       char c = (char)getc(input_stream);
-      line[i] = c;
       if (c == EOF || c == '\n') {
+        line[i] = EOF;
         break;
       }
+      line[i] = c;
     }
 
     cont = tick(line);
@@ -74,38 +97,97 @@ int main(int argc, char** argv) {
     parse
 */
 bool tick(char line[MAX_LINE_LEN]) {
-    /*Evaluate one line of assembly, update global registers and memory where needed.*/
+  /*Evaluate one line of assembly, update global registers and memory where
+   * needed.*/
+  bool cont = true;
+  char cmd_str[3] = {0};
+  memcpy(cmd_str, line, 3 * sizeof(char));
+  CMD cmd = identify_cmd(cmd_str);
 
-    char cmd_str[3] = {0};
-    memcpy(cmd_str, line, 3*sizeof(char));
-    CMD cmd = identify_cmd(cmd_str);
-
-    /* line identified by first three chars */
-    if(cmd==MOV) {
-        printf("MOV command detected\n");
-    }
-    else if (cmd==ADD){
-        printf("ADD command detected\n");
-    }
-    else if (cmd==RET){
-        printf("RET command detected\n");
-    }
-    else if(cmd==UNKNOWN){
-        printf("Error could not parse statement identifier: %c%c%c\n", cmd_str[0], cmd_str[1], cmd_str[2]);
-        return false;
-    }
-    return true;
+  /* line identified by first three chars */
+  if (cmd == MOV) {
+    printf("MOV command detected\n");
+    cont = mov(line);
+  } else if (cmd == ADD) {
+    printf("ADD command detected\n");
+  } else if (cmd == RET) {
+    printf("RET command detected\n");
+  } else if (cmd == UNKNOWN) {
+    printf("Error could not parse statement identifier: %c%c%c\n", cmd_str[0],
+           cmd_str[1], cmd_str[2]);
+    cont = false;
+  }
+  return cont;
 }
 
 CMD identify_cmd(char cmd[3]) {
-    if(cmd[0] == 'm'){
-        return MOV;
+  if (cmd[0] == 'm') {
+    return MOV;
+  } else if (cmd[0] == 'a') {
+    return ADD;
+  } else if (cmd[0] == 'r') {
+    return RET;
+  }
+  return UNKNOWN;
+}
+
+/*
+get args -> split, trim
+convert string to register (which is just an index into an array) (could take
+into account register labels later)
+
+args could be:
+- memory address (wrapped in '[]')
+- register name (starts with 'x')
+- register label (not supported yet)
+- constant (prefixed with '#')
+
+args are always comma separated
+
+different commands expect different number of args
+*/
+
+Args parse_args(char line[MAX_LINE_LEN]) {
+  Args args;
+  args.count = 0;
+  args.is_valid = true;
+  int i = 4;
+  char arg_str[MAX_IDENT_LEN] = {0};
+
+  for (; i < MAX_LINE_LEN; i++) {
+    if (line[i] == ',' || line[i] == EOF) {
+      Arg a;
+      if (arg_str[0] == '[') {
+        a.tag = ADDRESS;
+      } else if (arg_str[0] == 'x') {
+        a.tag = REGISTER;
+      } else if (arg_str[0] == '#') {
+        a.tag = CONSTANT;
+      } else {
+      }
+
+      args.args[args.count] = a;
+      args.count++;
     }
-    else if(cmd[0] == 'a'){
-        return ADD;
+    if (line[i] == EOF) {
+      break;
     }
-    else if(cmd[0] == 'r'){
-        return RET;
+    if (line[i] != ' ') {
+      arg_str[i] = line[i];
     }
-    return UNKNOWN;
+  }
+  return args;
+}
+
+bool mov(char line[MAX_LINE_LEN]) {
+  /* Parse and execute a mov command.
+      mov x0, x1;
+
+  */
+  Args a = parse_args(line);
+  if (!a.is_valid) {
+    return false;
+  }
+
+  return true;
 }

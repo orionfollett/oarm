@@ -21,6 +21,7 @@ BUILD_DIR=build
 SRC_DIR=src
 
 build(){
+    rm -rf $BUILD_DIR/
     mkdir -p $BUILD_DIR
     $CC $CFLAGS src/main.c -o $BUILD_DIR/$APP
 }
