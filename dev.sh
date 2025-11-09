@@ -16,8 +16,13 @@ CFLAGS=(
     -std=c89
     -O2
 )
-run(){
+
+build(){
     mkdir -p build
     $CC $CFLAGS src/main.c -o build/app
-    ./build/app
+}
+
+run(){
+    build    
+    ./build/app "$1"
 }

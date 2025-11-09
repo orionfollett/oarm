@@ -16,3 +16,12 @@ Project:
 Implement a REPL and file reading interpreter that supports a small subset of ARM assembly.
 
 ARM supported:
+
+- register labels
+- mov
+- add, sub
+- lsl, lsr
+- ldr
+- str
+- cmp
+- blt, bgt, ble, bge
