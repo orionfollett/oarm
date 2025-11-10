@@ -108,18 +108,12 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-/*
-    parse
-*/
 bool tick(char line[MAX_LINE_LEN]) {
-  /*Evaluate one line of assembly, update global registers and memory where
-   * needed.*/
+  /*Evaluate one line of asm.*/
   bool cont = true;
   char cmd_str[CMD_LEN] = {0};
   memcpy(cmd_str, line, CMD_LEN * sizeof(char));
   CMD cmd = identify_cmd(cmd_str);
-
-  /* line identified by first three chars */
 
   switch (cmd) {
     case ADD:

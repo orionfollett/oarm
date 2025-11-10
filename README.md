@@ -1,4 +1,4 @@
-Orion's Subset of ARM Interpreter
+Orion's Subset of ARM Assembly Interpreter
 
 Goal:
 - continue practicing programming with manual memory management
@@ -8,7 +8,7 @@ Goal:
 
 Why C?
 - timeless, lots of legacy code in C
-- understanding C helps understand most every other language
+- understanding C helps understand most every other language, as well as large codebases important to me like postgres and the linux kernel
 - forces me to do everything from scratch, which is a good thing since this is all educational anyways
 
 Project:
