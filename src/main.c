@@ -274,8 +274,8 @@ Args parse_args(char line[ARGS_LEN]) {
         args.is_valid = false;
         printf(
             "Error parsing args, couldn't recognize arg type. last char "
-            "parsed: %i\n",
-            line[i]);
+            "parsed: %i (%c)\n",
+            line[i], line[i]);
         return args;
       }
 
@@ -401,7 +401,9 @@ bool str(char line[MAX_LINE_LEN]) {
 
 bool add_or_sub(char line[MAX_LINE_LEN], bool is_add) {
   Args args = parse_args(line);
-
+  if(!args.is_valid){
+    return false;
+  }
   if (args.count != 3) {
     printf("add: expected 3 arguments, got %i\n", args.count);
     return false;
