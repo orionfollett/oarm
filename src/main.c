@@ -18,7 +18,7 @@ int registers[NUM_REGISTERS] = {0};
 int memory[MEM_BYTES] = {0};
 
 /*Types*/
-typedef enum { ADD, LDR, MEM, MOV, REG, RET, STR, UNKNOWN } CMD;
+typedef enum { ADD, LDR, MEM, MOV, REG, RET, STR, SUB, UNKNOWN } CMD;
 typedef int Register;
 
 typedef enum { A_CONSTANT, A_REGISTER } AddressType;
@@ -54,6 +54,7 @@ int parse_int(const char* num, int len);
 bool mov(char line[MAX_LINE_LEN]);
 bool ldr(char line[MAX_LINE_LEN]);
 bool str(char line[MAX_LINE_LEN]);
+bool add_or_sub(char line[MAX_LINE_LEN], bool is_add);
 void log_registers(void);
 void log_mem(void);
 /*Implementations*/
@@ -122,14 +123,14 @@ bool tick(char line[MAX_LINE_LEN]) {
 
   switch (cmd) {
     case ADD:
-      printf("ADD command detected\n");
+      add_or_sub(line, true);
       break;
     case LDR:
       ldr(line);
       break;
     case MEM:
-        log_mem();
-        break;
+      log_mem();
+      break;
     case MOV:
       mov(line);
       break;
@@ -140,6 +141,9 @@ bool tick(char line[MAX_LINE_LEN]) {
       break;
     case STR:
       str(line);
+      break;
+    case SUB:
+      add_or_sub(line, false);
       break;
     case UNKNOWN:
       printf("Error could not parse statement identifier: %c%c%c\n", cmd_str[0],
@@ -166,6 +170,9 @@ CMD identify_cmd(char cmd[CMD_LEN]) {
     case 'l':
       return LDR;
     case 's':
+      if (cmd[1] == 'u' && cmd[2] == 'b') {
+        return SUB;
+      }
       return STR;
   }
   return UNKNOWN;
@@ -398,6 +405,49 @@ bool str(char line[MAX_LINE_LEN]) {
   return true;
 }
 
+bool add_or_sub(char line[MAX_LINE_LEN], bool is_add) {
+  Args args = parse_args(line);
+
+  if (args.count != 3) {
+    printf("add: expected 3 arguments, got %i\n", args.count);
+    return false;
+  }
+
+  Arg a1 = args.args[0];
+  Arg a2 = args.args[1];
+  Arg a3 = args.args[2];
+
+  if (a1.tag != REGISTER) {
+    printf("add: expected first arg to be a register\n");
+    return false;
+  }
+
+  int val1 = 0;
+  if (a2.tag == REGISTER) {
+    val1 = registers[a2.reg];
+  } else if (a2.tag == CONSTANT) {
+    val1 = a2.constant;
+  } else {
+    printf("add: expected second arg to be a register or constant\n");
+    return false;
+  }
+
+  int val2 = 0;
+  if (a3.tag == REGISTER) {
+    val2 = registers[a3.reg];
+  } else if (a3.tag == CONSTANT) {
+    val2 = a3.constant;
+  } else {
+    printf("add: expected third arg to be a register or constant\n");
+    return false;
+  }
+  if (!is_add) {
+    val2 = val2 * -1;
+  }
+  registers[a1.reg] = val1 + val2;
+  return true;
+}
+
 void log_registers(void) {
   int i = 0;
   printf("registers: [");
@@ -408,13 +458,13 @@ void log_registers(void) {
 }
 
 void log_mem(void) {
-    int i = 0;
-    printf("mem: [");
-    for(; i < MEM_BYTES; i++){
-        if(i % 48 == 0){
-            printf("\n");
-        }
-        printf("%i, ", memory[i]);
+  int i = 0;
+  printf("mem: [");
+  for (; i < MEM_BYTES; i++) {
+    if (i % 48 == 0) {
+      printf("\n");
     }
-    printf("]\n");
+    printf("%i, ", memory[i]);
+  }
+  printf("]\n");
 }
