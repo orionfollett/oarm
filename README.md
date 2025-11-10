@@ -19,9 +19,8 @@ ARM supported:
 
 - register labels
 - mov
+- ldr, str
 - add, sub
 - lsl, lsr
-- ldr
-- str
 - cmp
 - blt, bgt, ble, bge

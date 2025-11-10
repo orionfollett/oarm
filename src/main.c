@@ -20,7 +20,12 @@ int memory[MEM_BYTES] = {0};
 /*Types*/
 typedef enum { MOV, ADD, RET, UNKNOWN, REG } CMD;
 typedef int Register;
-typedef int Address;
+
+typedef enum { A_REGISTER, A_CONSTANT } AddressType;
+typedef struct Address {
+  int val;
+  AddressType type;
+} Address;
 
 typedef enum { ADDRESS, REGISTER, CONSTANT } ArgType;
 
@@ -47,6 +52,7 @@ Args parse_args(char line[ARGS_LEN]);
 int parse_int(const char* num, int len);
 
 bool mov(char line[MAX_LINE_LEN]);
+bool ldr(char line[MAX_LINE_LEN]);
 void log_registers(void);
 /*Implementations*/
 
@@ -120,7 +126,7 @@ bool tick(char line[MAX_LINE_LEN]) {
   } else if (cmd == UNKNOWN) {
     printf("Error could not parse statement identifier: %c%c%c\n", cmd_str[0],
            cmd_str[1], cmd_str[2]);
-  } else if (cmd == REG){
+  } else if (cmd == REG) {
     log_registers();
   }
   return cont;
@@ -132,8 +138,8 @@ CMD identify_cmd(char cmd[CMD_LEN]) {
   } else if (cmd[0] == 'a') {
     return ADD;
   } else if (cmd[0] == 'r') {
-    if(cmd[1] == 'e' && cmd[2] == 'g') {
-        return REG;
+    if (cmd[1] == 'e' && cmd[2] == 'g') {
+      return REG;
     }
     return RET;
   }
@@ -159,6 +165,13 @@ different commands expect different number of args
 int parse_int(const char* num, int len) {
   /*Given an array of chars, return an int. Char array must be null
    * terminated.*/
+  if (len > 8) {
+    printf(
+        "Integer overflow detected in parse int. Max int is 8 digits. "
+        "Truncating digits.\n");
+    len = 8;
+  }
+
   int result = 0;
   int place = 1;
   int i = len - 1;
@@ -186,13 +199,59 @@ Args parse_args(char line[ARGS_LEN]) {
     bool arg_end = line[i] == ',' || line_end;
     if (arg_end) {
       Arg a;
+
+      /* ADDRESS argument*/
       if (line[arg_start] == '[') {
         a.tag = ADDRESS;
-        a.addr = 1;
-        /*TODO: not implemented yet*/
+        if (line[arg_start + 1] == 'x') {
+          a.addr.type = A_REGISTER;
+        } else if (line[arg_start + 1] == '#') {
+          a.addr.type = A_CONSTANT;
+        } else {
+          printf(
+              "Argument %i, unsupported address type, must be register or "
+              "constant.",
+              args.count);
+          args.is_valid = false;
+          return args;
+        }
+        int start = line + arg_start + 2;
+        int end = i - arg_start - 2;
+        if (end - start < 1) {
+          printf(
+              "Argument %i [col %i], expected numerical value for memory "
+              "address argument, got empty string.\n",
+              args.count, i);
+          args.is_valid = false;
+          return args;
+        }
+        a.addr.val = parse_int(start, end);
+
+        if (a.addr.type == A_CONSTANT) {
+          if (a.addr.val > MEM_BYTES || a.addr.val < 0) {
+            printf(
+                "Argument %i memory address is out of range, must be between 0 "
+                "and %i\n",
+                args.count, MEM_BYTES);
+            args.is_valid = false;
+            return args;
+          }
+        }
+
+        /*Register argument*/
       } else if (line[arg_start] == 'x') {
         a.tag = REGISTER;
         a.reg = parse_int(line + arg_start + 1, i - arg_start - 1);
+        if (a.reg > NUM_REGISTERS || a.reg < 0) {
+          printf(
+              "Argument %i register is out of range, must be between 0 and "
+              "%i\n",
+              args.count, NUM_REGISTERS);
+          args.is_valid = false;
+          return args;
+        }
+
+        /*constant argument*/
       } else if (line[arg_start] == '#') {
         a.tag = CONSTANT;
         a.constant = parse_int(line + arg_start + 1, i - arg_start - 1);
@@ -239,15 +298,7 @@ bool mov(char line[MAX_LINE_LEN]) {
   Arg a2 = args.args[1];
 
   if (a1.tag != REGISTER) {
-    printf(
-        "Expected first argument to mov to be a register or register label\n");
-    return false;
-  }
-
-  if (a1.reg > NUM_REGISTERS || a1.reg < 0) {
-    printf(
-        "First argument's register is out of range, must be between 0 and %i\n",
-        NUM_REGISTERS);
+    printf("mov: expected first argument to be a register or register label\n");
     return false;
   }
 
@@ -258,7 +309,7 @@ bool mov(char line[MAX_LINE_LEN]) {
     val = a2.constant;
   } else {
     printf(
-        "Expected second argument to mov to be a register, register label, or "
+        "mov: expected second argument to be a register, register label, "
         "constant\n");
     return false;
   }
@@ -267,11 +318,46 @@ bool mov(char line[MAX_LINE_LEN]) {
   return true;
 }
 
-void log_registers(void){
-    int i = 0;
-    printf("registers: [");
-    for(; i<NUM_REGISTERS; i++){
-        printf("%i, ", registers[i]);
+bool ldr(char line[MAX_LINE_LEN]) {
+  Args args = parse_args(line + CMD_LEN + 1);
+
+  if (!args.is_valid) {
+    return false;
+  }
+
+  if (args.count != 2) {
+    printf("ldr: expected 2 arguments got %i\n", args.count);
+  }
+
+  Arg a1 = args.args[0];
+  Arg a2 = args.args[1];
+
+  if (a1.tag != REGISTER) {
+    printf("ldr: expected first argument to be a register.\n");
+  }
+  if (a2.tag != ADDRESS) {
+    printf("ldr: expected second argument to be an address.\n");
+  }
+
+  if (a2.addr.type == A_REGISTER) {
+    int addr = registers[a2.addr.val];
+    if (addr < 0 || addr >= MEM_BYTES) {
+      printf("ldr: out of bounds memory access at address %i\n", addr);
+      return false;
     }
-    printf("]\n");
+    registers[a1.reg] = memory[addr];
+  } else if (a2.addr.type == A_CONSTANT) {
+    registers[a1.reg] = memory[a2.addr.val];
+  }
+
+  return true;
+}
+
+void log_registers(void) {
+  int i = 0;
+  printf("registers: [");
+  for (; i < NUM_REGISTERS; i++) {
+    printf("%i, ", registers[i]);
+  }
+  printf("]\n");
 }
