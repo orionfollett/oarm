@@ -43,7 +43,7 @@ typedef struct Args {
 bool tick(char line[MAX_LINE_LEN]);
 CMD identify_cmd(char cmd[CMD_LEN]);
 Args parse_args(char line[ARGS_LEN]);
-int parse_int(char num[MAX_IDENT_LEN], int len);
+int parse_int(const char* num, int len);
 bool mov(char line[MAX_LINE_LEN]);
 
 /*Implementations*/
@@ -151,21 +151,18 @@ args are always comma separated
 different commands expect different number of args
 */
 
-int parse_int(char num[MAX_IDENT_LEN], int len) {
+int parse_int(const char* num, int len) {
   /*Given an array of chars, return an int. Char array must be null
    * terminated.*/
-  int i = 0;
-  int place = 1;
-  for(; i < len; i++){
-    place = place * 10;
-  }
-
   int result = 0;
-  i = 0;
-  for (; i < len; i++) {
-    int digit = (int)num[i] - 48;
-    result = result + place * digit;
-    place = place / 10;
+  int place = 1;
+  int i = len-1;
+  for(; i >= 0; i--) {
+    if(num[i] < (int)'0' || num[i] > (int)'9') {
+        return 0;
+    }
+    result += place * (num[i] - (int)'0');
+    place = place * 10;
   }
   return result;
 }
@@ -174,42 +171,40 @@ Args parse_args(char line[ARGS_LEN]) {
   Args args;
   args.count = 0;
   args.is_valid = true;
-  int i = 0;
-  int j = 0;
-  char arg_str[MAX_IDENT_LEN] = {0};
 
+  int i = 0;
+  int arg_start = 0;
   for (; i < ARGS_LEN; i++) {
-    if (line[i] == ',' || line[i] == EOF) {
+    bool line_end = line[i] == EOF || line[i] == '\n';
+    bool arg_end = line[i] == ',' || line_end;
+    if (arg_end) {
       Arg a;
-      if (arg_str[0] == '[') {
+      if (line[arg_start] == '[') {
         a.tag = ADDRESS;
         a.addr = 1;
         /*TODO: not implemented yet*/
-      } else if (arg_str[0] == 'x') {
+      } else if (line[arg_start] == 'x') {
         a.tag = REGISTER;
-
-        /* Have x12 */
-        /*want to pass '12', 2*/
-        a.reg = parse_int(arg_str + 1, j+1);
-      } else if (arg_str[0] == '#') {
+        a.reg = parse_int(line + arg_start + 1, arg_start-i+1);
+      } else if (line[arg_start] == '#') {
         a.tag = CONSTANT;
         a.constant = 1;
       } else {
         args.is_valid = false;
+        printf("Error parsing args, couldn't recognize arg type. last char parsed: %i\n", line[i]);
         return args;
       }
 
       args.args[args.count] = a;
       args.count++;
-      memset(arg_str, 0, sizeof(arg_str));
-      j = 0;
+      arg_start = i+1;
+      continue;
     }
-    if (line[i] == EOF) {
+    if (line_end) {
       break;
     }
-    if (line[i] != ' ') {
-      arg_str[j] = line[i];
-      j++;
+    if (line[i] == ' ') {
+        arg_start++;
     }
   }
   return args;
@@ -225,13 +220,17 @@ bool mov(char line[MAX_LINE_LEN]) {
     return false;
   }
   printf("Args parsed.\n");
-  printf("Count: %i", a.count);
-  if(a.args[0].tag == REGISTER){
-    printf("REGISTER %i\n", a.args[0].reg);
+  printf("Count: %i\n", a.count);
+  int i = 0;
+  for(; i < a.count; i++){
+    if(a.args[i].tag == REGISTER){
+        printf("REGISTER %i\n", a.args[i].reg);
+    }
+    if(a.args[i].tag == CONSTANT){
+        printf("CONSTANT %i\n", a.args[i].constant);
+    }
   }
-  if(a.args[0].tag == CONSTANT){
-    printf("CONSTANT %i\n", a.args[0].constant);
-  }
+  
 
   return true;
 }
