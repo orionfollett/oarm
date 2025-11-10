@@ -274,8 +274,10 @@ Args parse_args(char line[ARGS_LEN]) {
         args.is_valid = false;
         printf(
             "Error parsing args, couldn't recognize arg type. last char "
-            "parsed: %i (%c)\n",
-            line[i], line[i]);
+            "parsed: %i (%c) (col: %i)\n",
+            line[i], line[i], i);
+        printf("confirm 1: %c", line[i - 1]); /*this is 0 <mind blown>*/
+        /*so the error is when parsing the second arg*/
         return args;
       }
 
@@ -285,10 +287,13 @@ Args parse_args(char line[ARGS_LEN]) {
       continue;
     }
     if (is_line_end) {
-      break;
+      return args;
     }
-    if (line[i] == ' ') {
-      arg_start++;
+    if (args.count == 3) {
+      return args;
+    }
+    if (line[i] == ' ' || line[i] == ',') {
+      arg_start = i + 1;
     }
   }
   return args;
@@ -401,7 +406,7 @@ bool str(char line[MAX_LINE_LEN]) {
 
 bool add_or_sub(char line[MAX_LINE_LEN], bool is_add) {
   Args args = parse_args(line);
-  if(!args.is_valid){
+  if (!args.is_valid) {
     return false;
   }
   if (args.count != 3) {
