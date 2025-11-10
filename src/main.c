@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -8,6 +9,7 @@
 #define MAX_LINE_LEN 128
 #define MAX_IDENT_LEN 32
 #define CMD_LEN 3
+#define ARG_LEN (MAX_IDENT_LEN - CMD_LEN - 1)
 #define NUM_REGISTERS 10
 #define MEM_BYTES 4096
 
@@ -149,26 +151,39 @@ args are always comma separated
 different commands expect different number of args
 */
 
-int parse_int(char num[MAX_IDENT_LEN - CMD_LEN - 1]){
-    /*Given an array of chars, return an int. Char array must be null terminated.*/
-    int i=0;
-    int result = 0;
-    int digits[MAX_IDENT_LEN] = {0};
+int parse_int(char num[MAX_IDENT_LEN]) {
+  /*Given an array of chars, return an int. Char array must be null
+   * terminated.*/
 
-    for(; i < MAX_IDENT_LEN; i++){
-        digits[i] =  (int)num[i] - 48;
+  /*subtract 48 to convert ASCII to int for single digit*/
+
+  /*go backwards until EOF is found*/
+  int result = 0;
+  int place = 0;
+  int i = MAX_IDENT_LEN - 1;
+  for (; i >= 0; i--) {
+    if (num[i] == EOF || num[i] == 0) {
+      place = 1;
+      continue;
     }
-    return result;
+    if (place == 0) {
+      continue;
+    }
+    int digit = (int)num[i] - 48;
+    result = result + place * digit;
+    place = place * 10;
+  }
+  return result;
 }
 
-Args parse_args(char line[MAX_LINE_LEN]) {
+Args parse_args(char line[ARG_LEN]) {
   Args args;
   args.count = 0;
   args.is_valid = true;
-  int i = 4;
+  int i = 0;
   char arg_str[MAX_IDENT_LEN] = {0};
 
-  for (; i < MAX_LINE_LEN; i++) {
+  for (; i < ARG_LEN; i++) {
     if (line[i] == ',' || line[i] == EOF) {
       Arg a;
       if (arg_str[0] == '[') {
@@ -177,18 +192,37 @@ Args parse_args(char line[MAX_LINE_LEN]) {
         /*TODO: not implemented yet*/
       } else if (arg_str[0] == 'x') {
         a.tag = REGISTER;
-        a.reg = 1;
-        
+        char num_str[MAX_IDENT_LEN];
+        bool end_hit = false;
+        int j = 1;
+        for (; j < MAX_IDENT_LEN - 1; j++) {
+          if (arg_str[j] >= (int)'0' && arg_str[j] <= (int)'9') {
+            num_str[j] = arg_str[j];
+          } else {
+            num_str[j] = 0;
+            end_hit = true;
+            break;
+          }
+        }
+        /*Clean this up its disgusting.*/
+        if (!end_hit) {
+          args.is_valid = false;
+          num_str[MAX_IDENT_LEN - 1] = 0;
+          printf("Invalid int passed: %s", num_str);
+          return args;
+        }
+        a.reg = parse_int(num_str);
       } else if (arg_str[0] == '#') {
         a.tag = CONSTANT;
         a.constant = 1;
       } else {
-        args.is_valid=false;
+        args.is_valid = false;
         return args;
       }
 
       args.args[args.count] = a;
       args.count++;
+      memset(arg_str, 0, sizeof(arg_str));
     }
     if (line[i] == EOF) {
       break;
@@ -208,6 +242,14 @@ bool mov(char line[MAX_LINE_LEN]) {
   Args a = parse_args(line);
   if (!a.is_valid) {
     return false;
+  }
+  printf("Args parsed.\n");
+  printf("Count: %i", a.count);
+  if(a.args[0].tag == REGISTER){
+    printf("REGISTER %i\n", a.args[0].reg);
+  }
+  if(a.args[0].tag == CONSTANT){
+    printf("CONSTANT %i\n", a.args[0].constant);
   }
 
   return true;
