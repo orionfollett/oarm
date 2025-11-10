@@ -18,16 +18,16 @@ int registers[NUM_REGISTERS] = {0};
 int memory[MEM_BYTES] = {0};
 
 /*Types*/
-typedef enum { MOV, ADD, RET, UNKNOWN, REG } CMD;
+typedef enum { ADD, LDR, MOV, REG, RET, STR, UNKNOWN } CMD;
 typedef int Register;
 
-typedef enum { A_REGISTER, A_CONSTANT } AddressType;
+typedef enum { A_CONSTANT, A_REGISTER } AddressType;
 typedef struct Address {
   int val;
   AddressType type;
 } Address;
 
-typedef enum { ADDRESS, REGISTER, CONSTANT } ArgType;
+typedef enum { ADDRESS, CONSTANT, REGISTER } ArgType;
 
 typedef struct Arg {
   ArgType tag;
@@ -53,6 +53,7 @@ int parse_int(const char* num, int len);
 
 bool mov(char line[MAX_LINE_LEN]);
 bool ldr(char line[MAX_LINE_LEN]);
+bool sdr(char line[MAX_LINE_LEN]);
 void log_registers(void);
 /*Implementations*/
 
@@ -117,17 +118,29 @@ bool tick(char line[MAX_LINE_LEN]) {
   CMD cmd = identify_cmd(cmd_str);
 
   /* line identified by first three chars */
-  if (cmd == MOV) {
-    mov(line);
-  } else if (cmd == ADD) {
-    printf("ADD command detected\n");
-  } else if (cmd == RET) {
-    printf("RET command detected\n");
-  } else if (cmd == UNKNOWN) {
-    printf("Error could not parse statement identifier: %c%c%c\n", cmd_str[0],
-           cmd_str[1], cmd_str[2]);
-  } else if (cmd == REG) {
-    log_registers();
+
+  switch (cmd) {
+    case ADD:
+      printf("ADD command detected\n");
+      break;
+    case LDR:
+      ldr(line);
+      break;
+    case MOV:
+      mov(line);
+      break;
+    case REG:
+      log_registers();
+      break;
+    case RET:
+      break;
+    case STR:
+      str(line);
+      break;
+    case UNKNOWN:
+      printf("Error could not parse statement identifier: %c%c%c\n", cmd_str[0],
+             cmd_str[1], cmd_str[2]);
+      break;
   }
   return cont;
 }
@@ -142,25 +155,13 @@ CMD identify_cmd(char cmd[CMD_LEN]) {
       return REG;
     }
     return RET;
+  } else if (cmd[0] = 'l') {
+    return LDR;
+  } else if (cmd[0] = 's') {
+    return STR;
   }
   return UNKNOWN;
 }
-
-/*
-get args -> split, trim
-convert string to register (which is just an index into an array) (could take
-into account register labels later)
-
-args could be:
-- memory address (wrapped in '[]')
-- register name (starts with 'x')
-- register label (not supported yet)
-- constant (prefixed with '#')
-
-args are always comma separated
-
-different commands expect different number of args
-*/
 
 int parse_int(const char* num, int len) {
   /*Given an array of chars, return an int. Char array must be null
@@ -215,7 +216,7 @@ Args parse_args(char line[ARGS_LEN]) {
           args.is_valid = false;
           return args;
         }
-        int start = line + arg_start + 2;
+        int start = arg_start + 2;
         int end = i - arg_start - 2;
         if (end - start < 1) {
           printf(
@@ -225,7 +226,7 @@ Args parse_args(char line[ARGS_LEN]) {
           args.is_valid = false;
           return args;
         }
-        a.addr.val = parse_int(start, end);
+        a.addr.val = parse_int(line + start, end);
 
         if (a.addr.type == A_CONSTANT) {
           if (a.addr.val > MEM_BYTES || a.addr.val < 0) {
@@ -280,10 +281,6 @@ Args parse_args(char line[ARGS_LEN]) {
 }
 
 bool mov(char line[MAX_LINE_LEN]) {
-  /* Parse and execute a mov command.
-      mov x0, x1;
-
-  */
   Args args = parse_args(line + CMD_LEN + 1);
   if (!args.is_valid) {
     return false;
@@ -319,6 +316,41 @@ bool mov(char line[MAX_LINE_LEN]) {
 }
 
 bool ldr(char line[MAX_LINE_LEN]) {
+  Args args = parse_args(line + CMD_LEN + 1);
+
+  if (!args.is_valid) {
+    return false;
+  }
+
+  if (args.count != 2) {
+    printf("ldr: expected 2 arguments got %i\n", args.count);
+  }
+
+  Arg a1 = args.args[0];
+  Arg a2 = args.args[1];
+
+  if (a1.tag != REGISTER) {
+    printf("ldr: expected first argument to be a register.\n");
+  }
+  if (a2.tag != ADDRESS) {
+    printf("ldr: expected second argument to be an address.\n");
+  }
+
+  if (a2.addr.type == A_REGISTER) {
+    int addr = registers[a2.addr.val];
+    if (addr < 0 || addr >= MEM_BYTES) {
+      printf("ldr: out of bounds memory access at address %i\n", addr);
+      return false;
+    }
+    registers[a1.reg] = memory[addr];
+  } else if (a2.addr.type == A_CONSTANT) {
+    registers[a1.reg] = memory[a2.addr.val];
+  }
+
+  return true;
+}
+
+bool str(char line[MAX_LINE_LEN]) {
   Args args = parse_args(line + CMD_LEN + 1);
 
   if (!args.is_valid) {
