@@ -18,7 +18,7 @@ int registers[NUM_REGISTERS] = {0};
 int memory[MEM_BYTES] = {0};
 
 /*Types*/
-typedef enum { MOV, ADD, RET, UNKNOWN } CMD;
+typedef enum { MOV, ADD, RET, UNKNOWN, REG } CMD;
 typedef int Register;
 typedef int Address;
 
@@ -42,10 +42,12 @@ typedef struct Args {
 /*Declarations*/
 bool tick(char line[MAX_LINE_LEN]);
 CMD identify_cmd(char cmd[CMD_LEN]);
+
 Args parse_args(char line[ARGS_LEN]);
 int parse_int(const char* num, int len);
-bool mov(char line[MAX_LINE_LEN]);
 
+bool mov(char line[MAX_LINE_LEN]);
+void log_registers(void);
 /*Implementations*/
 
 int main(int argc, char** argv) {
@@ -110,7 +112,7 @@ bool tick(char line[MAX_LINE_LEN]) {
 
   /* line identified by first three chars */
   if (cmd == MOV) {
-    cont = mov(line);
+    mov(line);
   } else if (cmd == ADD) {
     printf("ADD command detected\n");
   } else if (cmd == RET) {
@@ -118,7 +120,8 @@ bool tick(char line[MAX_LINE_LEN]) {
   } else if (cmd == UNKNOWN) {
     printf("Error could not parse statement identifier: %c%c%c\n", cmd_str[0],
            cmd_str[1], cmd_str[2]);
-    cont = false;
+  } else if (cmd == REG){
+    log_registers();
   }
   return cont;
 }
@@ -129,6 +132,9 @@ CMD identify_cmd(char cmd[CMD_LEN]) {
   } else if (cmd[0] == 'a') {
     return ADD;
   } else if (cmd[0] == 'r') {
+    if(cmd[1] == 'e' && cmd[2] == 'g') {
+        return REG;
+    }
     return RET;
   }
   return UNKNOWN;
@@ -155,11 +161,11 @@ int parse_int(const char* num, int len) {
    * terminated.*/
   int result = 0;
   int place = 1;
-  int i = len-1;
-  for(; i >= 0; i--) {
-    if(num[i] < (int)'0' || num[i] > (int)'9') {
-        printf("Non digit detected in parse int string\n");
-        return 0;
+  int i = len - 1;
+  for (; i >= 0; i--) {
+    if (num[i] < (int)'0' || num[i] > (int)'9') {
+      printf("Non digit detected in parse int string\n");
+      return 0;
     }
     result += place * (num[i] - (int)'0');
     place = place * 10;
@@ -186,26 +192,29 @@ Args parse_args(char line[ARGS_LEN]) {
         /*TODO: not implemented yet*/
       } else if (line[arg_start] == 'x') {
         a.tag = REGISTER;
-        a.reg = parse_int(line + arg_start + 1, i-arg_start-1);
+        a.reg = parse_int(line + arg_start + 1, i - arg_start - 1);
       } else if (line[arg_start] == '#') {
         a.tag = CONSTANT;
-        a.constant = 1;
+        a.constant = parse_int(line + arg_start + 1, i - arg_start - 1);
       } else {
         args.is_valid = false;
-        printf("Error parsing args, couldn't recognize arg type. last char parsed: %i\n", line[i]);
+        printf(
+            "Error parsing args, couldn't recognize arg type. last char "
+            "parsed: %i\n",
+            line[i]);
         return args;
       }
 
       args.args[args.count] = a;
       args.count++;
-      arg_start = i+1;
+      arg_start = i + 1;
       continue;
     }
     if (line_end) {
       break;
     }
     if (line[i] == ' ') {
-        arg_start++;
+      arg_start++;
     }
   }
   return args;
@@ -216,22 +225,53 @@ bool mov(char line[MAX_LINE_LEN]) {
       mov x0, x1;
 
   */
-  Args a = parse_args(line + CMD_LEN + 1);
-  if (!a.is_valid) {
+  Args args = parse_args(line + CMD_LEN + 1);
+  if (!args.is_valid) {
     return false;
   }
-  printf("Args parsed.\n");
-  printf("Count: %i\n", a.count);
-  int i = 0;
-  for(; i < a.count; i++){
-    if(a.args[i].tag == REGISTER){
-        printf("REGISTER %i\n", a.args[i].reg);
-    }
-    if(a.args[i].tag == CONSTANT){
-        printf("CONSTANT %i\n", a.args[i].constant);
-    }
-  }
-  
 
+  if (args.count != 2) {
+    printf("Expected exactly 2 args for mov\n");
+    return false;
+  }
+
+  Arg a1 = args.args[0];
+  Arg a2 = args.args[1];
+
+  if (a1.tag != REGISTER) {
+    printf(
+        "Expected first argument to mov to be a register or register label\n");
+    return false;
+  }
+
+  if (a1.reg > NUM_REGISTERS || a1.reg < 0) {
+    printf(
+        "First argument's register is out of range, must be between 0 and %i\n",
+        NUM_REGISTERS);
+    return false;
+  }
+
+  int val = 0;
+  if (a2.tag == REGISTER) {
+    val = registers[a2.reg];
+  } else if (a2.tag == CONSTANT) {
+    val = a2.constant;
+  } else {
+    printf(
+        "Expected second argument to mov to be a register, register label, or "
+        "constant\n");
+    return false;
+  }
+
+  registers[a1.reg] = val;
   return true;
+}
+
+void log_registers(void){
+    int i = 0;
+    printf("registers: [");
+    for(; i<NUM_REGISTERS; i++){
+        printf("%i, ", registers[i]);
+    }
+    printf("]\n");
 }
