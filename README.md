@@ -25,6 +25,11 @@ ARM supported:
 - cmp
 - blt, bgt, ble, bge
 
+How to run:
+```
+source dev.sh
+run
+```
 
 Next project...
 A compiler that generates my OARM asm from a simpler high level language?
