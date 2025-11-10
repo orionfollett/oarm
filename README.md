@@ -24,3 +24,7 @@ ARM supported:
 - lsl, lsr
 - cmp
 - blt, bgt, ble, bge
+
+
+Next project...
+A compiler that generates my OARM asm from a simpler high level language?
