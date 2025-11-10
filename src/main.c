@@ -9,7 +9,7 @@
 #define MAX_LINE_LEN 128
 #define MAX_IDENT_LEN 32
 #define CMD_LEN 3
-#define ARG_LEN (MAX_IDENT_LEN - CMD_LEN - 1)
+#define ARGS_LEN (MAX_LINE_LEN - CMD_LEN - 1)
 #define NUM_REGISTERS 10
 #define MEM_BYTES 4096
 
@@ -42,8 +42,8 @@ typedef struct Args {
 /*Declarations*/
 bool tick(char line[MAX_LINE_LEN]);
 CMD identify_cmd(char cmd[CMD_LEN]);
-Args parse_args(char line[MAX_LINE_LEN]);
-int parse_int(char num[MAX_IDENT_LEN - CMD_LEN - 1]);
+Args parse_args(char line[ARGS_LEN]);
+int parse_int(char num[MAX_IDENT_LEN], int len);
 bool mov(char line[MAX_LINE_LEN]);
 
 /*Implementations*/
@@ -151,39 +151,34 @@ args are always comma separated
 different commands expect different number of args
 */
 
-int parse_int(char num[MAX_IDENT_LEN]) {
+int parse_int(char num[MAX_IDENT_LEN], int len) {
   /*Given an array of chars, return an int. Char array must be null
    * terminated.*/
+  int i = 0;
+  int place = 1;
+  for(; i < len; i++){
+    place = place * 10;
+  }
 
-  /*subtract 48 to convert ASCII to int for single digit*/
-
-  /*go backwards until EOF is found*/
   int result = 0;
-  int place = 0;
-  int i = MAX_IDENT_LEN - 1;
-  for (; i >= 0; i--) {
-    if (num[i] == EOF || num[i] == 0) {
-      place = 1;
-      continue;
-    }
-    if (place == 0) {
-      continue;
-    }
+  i = 0;
+  for (; i < len; i++) {
     int digit = (int)num[i] - 48;
     result = result + place * digit;
-    place = place * 10;
+    place = place / 10;
   }
   return result;
 }
 
-Args parse_args(char line[ARG_LEN]) {
+Args parse_args(char line[ARGS_LEN]) {
   Args args;
   args.count = 0;
   args.is_valid = true;
   int i = 0;
+  int j = 0;
   char arg_str[MAX_IDENT_LEN] = {0};
 
-  for (; i < ARG_LEN; i++) {
+  for (; i < ARGS_LEN; i++) {
     if (line[i] == ',' || line[i] == EOF) {
       Arg a;
       if (arg_str[0] == '[') {
@@ -192,26 +187,10 @@ Args parse_args(char line[ARG_LEN]) {
         /*TODO: not implemented yet*/
       } else if (arg_str[0] == 'x') {
         a.tag = REGISTER;
-        char num_str[MAX_IDENT_LEN];
-        bool end_hit = false;
-        int j = 1;
-        for (; j < MAX_IDENT_LEN - 1; j++) {
-          if (arg_str[j] >= (int)'0' && arg_str[j] <= (int)'9') {
-            num_str[j] = arg_str[j];
-          } else {
-            num_str[j] = 0;
-            end_hit = true;
-            break;
-          }
-        }
-        /*Clean this up its disgusting.*/
-        if (!end_hit) {
-          args.is_valid = false;
-          num_str[MAX_IDENT_LEN - 1] = 0;
-          printf("Invalid int passed: %s", num_str);
-          return args;
-        }
-        a.reg = parse_int(num_str);
+
+        /* Have x12 */
+        /*want to pass '12', 2*/
+        a.reg = parse_int(arg_str + 1, j+1);
       } else if (arg_str[0] == '#') {
         a.tag = CONSTANT;
         a.constant = 1;
@@ -223,12 +202,14 @@ Args parse_args(char line[ARG_LEN]) {
       args.args[args.count] = a;
       args.count++;
       memset(arg_str, 0, sizeof(arg_str));
+      j = 0;
     }
     if (line[i] == EOF) {
       break;
     }
     if (line[i] != ' ') {
-      arg_str[i] = line[i];
+      arg_str[j] = line[i];
+      j++;
     }
   }
   return args;
@@ -239,7 +220,7 @@ bool mov(char line[MAX_LINE_LEN]) {
       mov x0, x1;
 
   */
-  Args a = parse_args(line);
+  Args a = parse_args(line + CMD_LEN + 1);
   if (!a.is_valid) {
     return false;
   }
