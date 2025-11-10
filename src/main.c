@@ -53,7 +53,7 @@ int parse_int(const char* num, int len);
 
 bool mov(char line[MAX_LINE_LEN]);
 bool ldr(char line[MAX_LINE_LEN]);
-bool sdr(char line[MAX_LINE_LEN]);
+bool str(char line[MAX_LINE_LEN]);
 void log_registers(void);
 /*Implementations*/
 
@@ -155,9 +155,9 @@ CMD identify_cmd(char cmd[CMD_LEN]) {
       return REG;
     }
     return RET;
-  } else if (cmd[0] = 'l') {
+  } else if (cmd[0] == 'l') {
     return LDR;
-  } else if (cmd[0] = 's') {
+  } else if (cmd[0] == 's') {
     return STR;
   }
   return UNKNOWN;
@@ -178,7 +178,7 @@ int parse_int(const char* num, int len) {
   int i = len - 1;
   for (; i >= 0; i--) {
     if (num[i] < (int)'0' || num[i] > (int)'9') {
-      printf("Non digit detected in parse int string\n");
+      printf("Non digit detected in parse int string: %x (%i)\n", num[i], num[i]);
       return 0;
     }
     result += place * (num[i] - (int)'0');
@@ -212,17 +212,17 @@ Args parse_args(char line[ARGS_LEN]) {
           printf(
               "Argument %i, unsupported address type, must be register or "
               "constant.",
-              args.count);
+              args.count + 1);
           args.is_valid = false;
           return args;
         }
         int start = arg_start + 2;
-        int end = i - arg_start - 2;
+        int end = i - 1;
         if (end - start < 1) {
           printf(
-              "Argument %i [col %i], expected numerical value for memory "
+              "Argument %i [col %i:%i], expected numerical value for memory "
               "address argument, got empty string.\n",
-              args.count, i);
+              args.count + 1, start, end);
           args.is_valid = false;
           return args;
         }
@@ -233,7 +233,7 @@ Args parse_args(char line[ARGS_LEN]) {
             printf(
                 "Argument %i memory address is out of range, must be between 0 "
                 "and %i\n",
-                args.count, MEM_BYTES);
+                args.count + 1, MEM_BYTES);
             args.is_valid = false;
             return args;
           }
@@ -242,12 +242,14 @@ Args parse_args(char line[ARGS_LEN]) {
         /*Register argument*/
       } else if (line[arg_start] == 'x') {
         a.tag = REGISTER;
-        a.reg = parse_int(line + arg_start + 1, i - arg_start - 1);
+        int start = arg_start + 1;
+        int end = i - arg_start - 1;
+        a.reg = parse_int(line + start, end);
         if (a.reg > NUM_REGISTERS || a.reg < 0) {
           printf(
               "Argument %i register is out of range, must be between 0 and "
               "%i\n",
-              args.count, NUM_REGISTERS);
+              args.count + 1, NUM_REGISTERS);
           args.is_valid = false;
           return args;
         }
@@ -255,7 +257,9 @@ Args parse_args(char line[ARGS_LEN]) {
         /*constant argument*/
       } else if (line[arg_start] == '#') {
         a.tag = CONSTANT;
-        a.constant = parse_int(line + arg_start + 1, i - arg_start - 1);
+        int start = arg_start + 1;
+        int end = i - arg_start - 1;
+        a.constant = parse_int(line + start, end);
       } else {
         args.is_valid = false;
         printf(
@@ -358,28 +362,28 @@ bool str(char line[MAX_LINE_LEN]) {
   }
 
   if (args.count != 2) {
-    printf("ldr: expected 2 arguments got %i\n", args.count);
+    printf("str: expected 2 arguments got %i\n", args.count);
   }
 
   Arg a1 = args.args[0];
   Arg a2 = args.args[1];
 
   if (a1.tag != REGISTER) {
-    printf("ldr: expected first argument to be a register.\n");
+    printf("str: expected first argument to be a register.\n");
   }
   if (a2.tag != ADDRESS) {
-    printf("ldr: expected second argument to be an address.\n");
+    printf("str: expected second argument to be an address.\n");
   }
 
   if (a2.addr.type == A_REGISTER) {
     int addr = registers[a2.addr.val];
     if (addr < 0 || addr >= MEM_BYTES) {
-      printf("ldr: out of bounds memory access at address %i\n", addr);
+      printf("str: out of bounds memory access at address %i\n", addr);
       return false;
     }
-    registers[a1.reg] = memory[addr];
+    memory[addr] = registers[a1.reg];
   } else if (a2.addr.type == A_CONSTANT) {
-    registers[a1.reg] = memory[a2.addr.val];
+    memory[a2.addr.val] = registers[a1.reg];
   }
 
   return true;
