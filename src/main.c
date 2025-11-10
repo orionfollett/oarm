@@ -196,9 +196,9 @@ Args parse_args(char line[ARGS_LEN]) {
   int i = 0;
   int arg_start = 0;
   for (; i < ARGS_LEN; i++) {
-    bool line_end = line[i] == EOF || line[i] == '\n';
-    bool arg_end = line[i] == ',' || line_end;
-    if (arg_end) {
+    bool is_line_end = line[i] == EOF || line[i] == '\n';
+    bool is_arg_end = line[i] == ',' || is_line_end;
+    if (is_arg_end) {
       Arg a;
 
       /* ADDRESS argument*/
@@ -217,16 +217,16 @@ Args parse_args(char line[ARGS_LEN]) {
           return args;
         }
         int start = arg_start + 2;
-        int end = i - 1;
-        if (end - start < 1) {
+        int len = i - arg_start - 3;
+        if (len < 1) {
           printf(
               "Argument %i [col %i:%i], expected numerical value for memory "
               "address argument, got empty string.\n",
-              args.count + 1, start, end);
+              args.count + 1, start, len);
           args.is_valid = false;
           return args;
         }
-        a.addr.val = parse_int(line + start, end);
+        a.addr.val = parse_int(line + start, len);
 
         if (a.addr.type == A_CONSTANT) {
           if (a.addr.val > MEM_BYTES || a.addr.val < 0) {
@@ -243,8 +243,8 @@ Args parse_args(char line[ARGS_LEN]) {
       } else if (line[arg_start] == 'x') {
         a.tag = REGISTER;
         int start = arg_start + 1;
-        int end = i - arg_start - 1;
-        a.reg = parse_int(line + start, end);
+        int len = i - arg_start - 1;
+        a.reg = parse_int(line + start, len);
         if (a.reg > NUM_REGISTERS || a.reg < 0) {
           printf(
               "Argument %i register is out of range, must be between 0 and "
@@ -258,8 +258,8 @@ Args parse_args(char line[ARGS_LEN]) {
       } else if (line[arg_start] == '#') {
         a.tag = CONSTANT;
         int start = arg_start + 1;
-        int end = i - arg_start - 1;
-        a.constant = parse_int(line + start, end);
+        int len = i - arg_start - 1;
+        a.constant = parse_int(line + start, len);
       } else {
         args.is_valid = false;
         printf(
@@ -274,7 +274,7 @@ Args parse_args(char line[ARGS_LEN]) {
       arg_start = i + 1;
       continue;
     }
-    if (line_end) {
+    if (is_line_end) {
       break;
     }
     if (line[i] == ' ') {
