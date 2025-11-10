@@ -11,14 +11,14 @@
 #define CMD_LEN 3
 #define ARGS_LEN (MAX_LINE_LEN - CMD_LEN - 1)
 #define NUM_REGISTERS 10
-#define MEM_BYTES 4096
+#define MEM_BYTES 256
 
 /*Globals*/
 int registers[NUM_REGISTERS] = {0};
 int memory[MEM_BYTES] = {0};
 
 /*Types*/
-typedef enum { ADD, LDR, MOV, REG, RET, STR, UNKNOWN } CMD;
+typedef enum { ADD, LDR, MEM, MOV, REG, RET, STR, UNKNOWN } CMD;
 typedef int Register;
 
 typedef enum { A_CONSTANT, A_REGISTER } AddressType;
@@ -55,6 +55,7 @@ bool mov(char line[MAX_LINE_LEN]);
 bool ldr(char line[MAX_LINE_LEN]);
 bool str(char line[MAX_LINE_LEN]);
 void log_registers(void);
+void log_mem(void);
 /*Implementations*/
 
 int main(int argc, char** argv) {
@@ -126,6 +127,9 @@ bool tick(char line[MAX_LINE_LEN]) {
     case LDR:
       ldr(line);
       break;
+    case MEM:
+        log_mem();
+        break;
     case MOV:
       mov(line);
       break;
@@ -146,19 +150,23 @@ bool tick(char line[MAX_LINE_LEN]) {
 }
 
 CMD identify_cmd(char cmd[CMD_LEN]) {
-  if (cmd[0] == 'm') {
-    return MOV;
-  } else if (cmd[0] == 'a') {
-    return ADD;
-  } else if (cmd[0] == 'r') {
-    if (cmd[1] == 'e' && cmd[2] == 'g') {
-      return REG;
-    }
-    return RET;
-  } else if (cmd[0] == 'l') {
-    return LDR;
-  } else if (cmd[0] == 's') {
-    return STR;
+  switch (cmd[0]) {
+    case 'm':
+      if (cmd[1] == 'e' && cmd[2] == 'm') {
+        return MEM;
+      }
+      return MOV;
+    case 'a':
+      return ADD;
+    case 'r':
+      if (cmd[1] == 'e' && cmd[2] == 'g') {
+        return REG;
+      }
+      return RET;
+    case 'l':
+      return LDR;
+    case 's':
+      return STR;
   }
   return UNKNOWN;
 }
@@ -178,7 +186,8 @@ int parse_int(const char* num, int len) {
   int i = len - 1;
   for (; i >= 0; i--) {
     if (num[i] < (int)'0' || num[i] > (int)'9') {
-      printf("Non digit detected in parse int string: %x (%i)\n", num[i], num[i]);
+      printf("Non digit detected in parse int string: %x (%i)\n", num[i],
+             num[i]);
       return 0;
     }
     result += place * (num[i] - (int)'0');
@@ -396,4 +405,16 @@ void log_registers(void) {
     printf("%i, ", registers[i]);
   }
   printf("]\n");
+}
+
+void log_mem(void) {
+    int i = 0;
+    printf("mem: [");
+    for(; i < MEM_BYTES; i++){
+        if(i % 48 == 0){
+            printf("\n");
+        }
+        printf("%i, ", memory[i]);
+    }
+    printf("]\n");
 }
