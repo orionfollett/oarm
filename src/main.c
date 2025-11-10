@@ -110,7 +110,6 @@ bool tick(char line[MAX_LINE_LEN]) {
 
   /* line identified by first three chars */
   if (cmd == MOV) {
-    printf("MOV command detected\n");
     cont = mov(line);
   } else if (cmd == ADD) {
     printf("ADD command detected\n");
@@ -159,11 +158,13 @@ int parse_int(const char* num, int len) {
   int i = len-1;
   for(; i >= 0; i--) {
     if(num[i] < (int)'0' || num[i] > (int)'9') {
+        printf("Non digit detected in parse int string\n");
         return 0;
     }
     result += place * (num[i] - (int)'0');
     place = place * 10;
   }
+
   return result;
 }
 
@@ -185,7 +186,7 @@ Args parse_args(char line[ARGS_LEN]) {
         /*TODO: not implemented yet*/
       } else if (line[arg_start] == 'x') {
         a.tag = REGISTER;
-        a.reg = parse_int(line + arg_start + 1, arg_start-i+1);
+        a.reg = parse_int(line + arg_start + 1, i-arg_start-1);
       } else if (line[arg_start] == '#') {
         a.tag = CONSTANT;
         a.constant = 1;
