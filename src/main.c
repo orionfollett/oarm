@@ -69,6 +69,8 @@ void lsl_or_lsr(char line[MAX_LINE_LEN], bool is_left);
 bool validate_args(Args args, ArgValidations validations);
 void log_registers(void);
 void log_mem(void);
+int get_register_or_constant(Arg a);
+
 /*Implementations*/
 
 int main(int argc, char** argv) {
@@ -330,30 +332,23 @@ void mov(char line[MAX_LINE_LEN]) {
     return;
   }
 
-  if (args.count != 2) {
-    printf("Expected exactly 2 args for mov\n");
+  ArgValidations v;
+  v.cmd_pretty_str = "mov";
+  v.expected_arg_count = 2;
+  ArgValidation first_arg;
+  first_arg.expected_arg_type = REGISTER;
+  ArgValidation second_arg;
+  second_arg.expected_arg_type = REGISTER_OR_CONSTANT;
+  v.validations[0] = first_arg;
+  v.validations[1] = second_arg;
+  if (!validate_args(args, v)) {
     return;
   }
 
   Arg a1 = args.args[0];
   Arg a2 = args.args[1];
-
-  if (a1.tag != REGISTER) {
-    printf("mov: expected first argument to be a register or register label\n");
-    return;
-  }
-
-  int val = 0;
-  if (a2.tag == REGISTER) {
-    val = registers[a2.reg];
-  } else if (a2.tag == CONSTANT) {
-    val = a2.constant;
-  } else {
-    printf(
-        "mov: expected second argument to be a register, register label, "
-        "constant\n");
-    return;
-  }
+  
+  int val = get_register_or_constant(a2);
 
   registers[a1.reg] = val;
   return;
@@ -463,19 +458,8 @@ void add_or_sub(char line[MAX_LINE_LEN], bool is_add) {
   Arg a2 = args.args[1];
   Arg a3 = args.args[2];
 
-  int val1 = 0;
-  if (a2.tag == REGISTER) {
-    val1 = registers[a2.reg];
-  } else if (a2.tag == CONSTANT) {
-    val1 = a2.constant;
-  }
-
-  int val2 = 0;
-  if (a3.tag == REGISTER) {
-    val2 = registers[a3.reg];
-  } else if (a3.tag == CONSTANT) {
-    val2 = a3.constant;
-  }
+  int val1 = get_register_or_constant(a2);
+  int val2 = get_register_or_constant(a3);
 
   if (!is_add) {
     val2 = val2 * -1;
@@ -514,19 +498,8 @@ void lsl_or_lsr(char line[MAX_LINE_LEN], bool is_left) {
   Arg a2 = args.args[1];
   Arg a3 = args.args[2];
 
-  int val1 = 0;
-  if (a2.tag == REGISTER) {
-    val1 = registers[a2.reg];
-  } else if (a2.tag == CONSTANT) {
-    val1 = a2.constant;
-  }
-
-  int val2 = 0;
-  if (a3.tag == REGISTER) {
-    val2 = registers[a3.reg];
-  } else if (a3.tag == CONSTANT) {
-    val2 = a3.constant;
-  }
+  int val1 = get_register_or_constant(a2);
+  int val2 = get_register_or_constant(a3);
 
   if (is_left) {
     registers[a1.reg] = val2 << val1;
@@ -590,4 +563,14 @@ bool validate_args(Args args, ArgValidations validations) {
     }
   }
   return true;
+}
+
+int get_register_or_constant(Arg a){
+  int val = 0;
+  if (a.tag == REGISTER) {
+    val = registers[a.reg];
+  } else if (a.tag == CONSTANT) {
+    val = a.constant;
+  }
+  return val;
 }
