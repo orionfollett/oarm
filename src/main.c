@@ -18,7 +18,7 @@ int registers[NUM_REGISTERS] = {0};
 int memory[MEM_BYTES] = {0};
 
 /*Types*/
-typedef enum { ADD, LDR, MEM, MOV, REG, RET, STR, SUB, UNKNOWN } CMD;
+typedef enum { ADD, LDR, LSL, LSR, MEM, MOV, REG, RET, STR, SUB, UNKNOWN } CMD;
 typedef int Register;
 
 typedef enum { A_CONSTANT, A_REGISTER } AddressType;
@@ -27,7 +27,7 @@ typedef struct Address {
   AddressType type;
 } Address;
 
-typedef enum { ADDRESS, CONSTANT, REGISTER } ArgType;
+typedef enum { ADDRESS, CONSTANT, REGISTER, REGISTER_OR_CONSTANT} ArgType;
 
 typedef struct Arg {
   ArgType tag;
@@ -44,6 +44,17 @@ typedef struct Args {
   bool is_valid;
 } Args;
 
+
+typedef struct ArgValidation {
+  ArgType expected_arg_type;
+} ArgValidation;
+
+typedef struct ArgValidations {
+  int expected_arg_count;
+  const char* cmd_pretty_str;
+  ArgValidation validations[3];
+} ArgValidations;
+
 /*Declarations*/
 bool tick(char line[MAX_LINE_LEN]);
 CMD identify_cmd(char cmd[CMD_LEN]);
@@ -55,6 +66,8 @@ bool mov(char line[MAX_LINE_LEN]);
 bool ldr(char line[MAX_LINE_LEN]);
 bool str(char line[MAX_LINE_LEN]);
 bool add_or_sub(char line[MAX_LINE_LEN], bool is_add);
+void lsl_or_lsr(char line[MAX_LINE_LEN], bool is_left);
+bool validate_args(Args args, ArgValidations validations);
 void log_registers(void);
 void log_mem(void);
 /*Implementations*/
@@ -122,6 +135,12 @@ bool tick(char line[MAX_LINE_LEN]) {
     case LDR:
       ldr(line);
       break;
+    case LSL:
+      lsl_or_lsr(line, true);
+      break;
+    case LSR:
+      lsl_or_lsr(line, false);
+      break;
     case MEM:
       log_mem();
       break;
@@ -162,6 +181,13 @@ CMD identify_cmd(char cmd[CMD_LEN]) {
       }
       return RET;
     case 'l':
+      if (cmd[1] == 's') {
+        if (cmd[2] == 'l') {
+          return LSL;
+        } else if (cmd[2] == 'r') {
+          return LSR;
+        }
+      }
       return LDR;
     case 's':
       if (cmd[1] == 'u' && cmd[2] == 'b') {
@@ -449,6 +475,58 @@ bool add_or_sub(char line[MAX_LINE_LEN], bool is_add) {
   return true;
 }
 
+void lsl_or_lsr(char line[MAX_LINE_LEN], bool is_left){
+  Args args = parse_args(line);
+  if (!args.is_valid) {
+    return;
+  }
+  
+  ArgValidations v;
+  if(is_left){
+    v.cmd_pretty_str = "lsl";
+  } else{
+    v.cmd_pretty_str = "lsr";
+  }
+  v.expected_arg_count = 3;
+  ArgValidation first_arg;
+  first_arg.expected_arg_type = REGISTER;
+  ArgValidation second_arg;
+  second_arg.expected_arg_type = REGISTER_OR_CONSTANT;
+  ArgValidation third_arg;
+  third_arg.expected_arg_type = REGISTER_OR_CONSTANT;
+  v.validations[0] = first_arg;
+  v.validations[1] = second_arg;
+  v.validations[2] = third_arg;
+  if(!validate_args(args, v)){
+    return;
+  }
+
+  Arg a1 = args.args[0];
+  Arg a2 = args.args[1];
+  Arg a3 = args.args[2];
+
+  int val1 = 0;
+  if (a2.tag == REGISTER) {
+    val1 = registers[a2.reg];
+  } else if (a2.tag == CONSTANT) {
+    val1 = a2.constant;
+  }
+
+  int val2 = 0;
+  if (a3.tag == REGISTER) {
+    val2 = registers[a3.reg];
+  } else if (a3.tag == CONSTANT) {
+    val2 = a3.constant;
+  }
+
+  if (is_left) {
+    registers[a1.reg] = val2 << val1;
+  } else {
+    registers[a1.reg] = val2 >> val1;
+  }
+  return;
+}
+
 void log_registers(void) {
   int i = 0;
   printf("registers: [");
@@ -468,4 +546,36 @@ void log_mem(void) {
     printf("%i, ", memory[i]);
   }
   printf("]\n");
+}
+
+bool validate_args(Args args, ArgValidations validations) {
+  if (args.count != validations.expected_arg_count) {
+    printf("%s: expected %i arguments, got %i\n", validations.cmd_pretty_str, validations.expected_arg_count, args.count);
+    return false;
+  }
+  int i = 0;
+  for(; i < args.count; i++){
+    ArgType cmd_type = args.args[i].tag;
+    ArgType expected = validations.validations[i].expected_arg_type;
+
+    if(expected == REGISTER_OR_CONSTANT && !(cmd_type == REGISTER) && !(cmd_type == CONSTANT)){
+      printf("%s: expected arg %i to be a register or a constant.\n", validations.cmd_pretty_str, i+1);
+      return false;
+    }
+    if(expected != REGISTER_OR_CONSTANT && expected != cmd_type){
+      const char* err_msg = "";
+      if(expected==REGISTER){
+        err_msg = "register";
+      }
+      else if(expected==CONSTANT){
+        err_msg = "constant";
+      }
+      if(expected==ADDRESS){
+        err_msg = "address";
+      }
+      printf("%s: expected arg %i to be a %s.\n", validations.cmd_pretty_str, i+1, err_msg);
+      return false;
+    }
+  }
+  return true;
 }
