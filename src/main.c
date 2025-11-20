@@ -13,11 +13,9 @@
 #define NUM_REGISTERS 10
 #define MEM_BYTES 256
 
-/*Globals*/
 int registers[NUM_REGISTERS] = {0};
 int memory[MEM_BYTES] = {0};
 
-/*Types*/
 typedef enum { ADD, LDR, LSL, LSR, MEM, MOV, REG, RET, STR, SUB, UNKNOWN } CMD;
 typedef int Register;
 
@@ -303,8 +301,6 @@ Args parse_args(char line[ARGS_LEN]) {
             "Error parsing args, couldn't recognize arg type. last char "
             "parsed: %i (%c) (col: %i)\n",
             line[i], line[i], i);
-        printf("confirm 1: %c", line[i - 1]); /*this is 0 <mind blown>*/
-        /*so the error is when parsing the second arg*/
         return args;
       }
 
