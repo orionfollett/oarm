@@ -149,7 +149,8 @@ int main(int argc, char** argv) {
 
   /*Copy the file into memory*/
   /*fun fact, there is a race condition between getting size of file and
-   * allocating memory. Whatever though, don't run the assembler while editing the file.*/
+   * allocating memory. Whatever though, don't run the assembler while editing
+   * the file.*/
   fseek(input_stream, 0, SEEK_END);
   long fsize = ftell(input_stream);
   fseek(input_stream, 0, SEEK_SET);
@@ -162,32 +163,33 @@ int main(int argc, char** argv) {
   First pass:
   - squash white space - not needed for now, assume white space is good
   - split into lines (makes jumping easier)
-  - tokenize each line (split lines by separators, eliminates whitespace, allows parsing individual tokens that you know are correct)
+  - tokenize each line (split lines by separators, eliminates whitespace, allows
+  parsing individual tokens that you know are correct)
   - collect label declarations, label uses
   - replace label uses with absolute jump position
   */
 
   /* squash seps
-  
+
   ' ' -> squash multi into single whitespace
   ' ,' -> squash into ','
   ', ' -> squash into ','
   ':', '[', ']'
   */
-  
+
   int i = 0;
   int line_counter = 0;
   char line[MAX_LINE_LEN] = {0};
-  for(; i < fsize; i++) {
+  for (; i < fsize; i++) {
     char c = program[i];
-    if(c == EOF){
+    if (c == EOF) {
       break;
     }
-    if(line_counter > MAX_LINE_LEN){
+    if (line_counter > MAX_LINE_LEN) {
       printf("max line len of %i exceeded", MAX_LINE_LEN);
       break;
     }
-    if(line_counter == 0){
+    if (line_counter == 0) {
       printf("> ");
     }
 
@@ -196,12 +198,12 @@ int main(int argc, char** argv) {
 
     putchar(c);
 
-    if(c == '\n'){
+    if (c == '\n') {
       if (!tick(line)) {
         break;
       }
       line_counter = 0;
-      memset(line, 0, sizeof(char)*MAX_LINE_LEN);
+      memset(line, 0, sizeof(char) * MAX_LINE_LEN);
     }
   }
 
@@ -210,29 +212,35 @@ int main(int argc, char** argv) {
 }
 
 TokenizedProgram tokenize(char* str, int length) {
-  int i  = 0;
-  TokenizedProgram program;
-  program.len=0;
-  program.lines = (Line*)malloc(sizeof(Line));
   int program_size = 1;
+  TokenizedProgram program;
+  program.len = 0;
+  program.lines = (Line*)malloc(program_size * sizeof(Line));
+
+  Token t;
+  t.len = 0;
 
   int line_counter = 0;
-  Line line;
-  line.len = 0;
-
-  for(; i < length; i++) {
+  int i = 0;
+  for (; i < length; i++) {
     char c = str[i];
-    
-    program.lines[line_counter].tokens
-    switch(c){
+
+    switch (c) {
       case '\n':
-        line.
-        line_counter++;
+        if (t.len > 0) {
+          line_counter++;
+        }
       case ' ':
       case ',':
       case ':':
+        program.lines[line_counter].tokens[program.lines[line_counter].len] = t;
         program.lines[line_counter].len++;
+        t.len = 0;
+        memset(t.tok, 0, sizeof(char) * MAX_IDENT_LEN);
         break;
+      default:
+        t.tok[t.len] = c;
+        t.len++;
     }
   }
 }
