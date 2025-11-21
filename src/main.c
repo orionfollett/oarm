@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
   char* program = malloc((unsigned long)(fsize + 1));
   fread(program, (unsigned long)fsize, 1, input_stream);
   fclose(input_stream);
-  program[fsize] = 0;
+  program[fsize] = EOF;
 
   /*
   read the full contents from the file into memory
@@ -154,26 +154,33 @@ int main(int argc, char** argv) {
 
   printf("oarm v0.1\n____\n\n");
 
-  int offset = 0;
-  while (true) {
-    printf("> ");
+  int i = 0;
+  int line_counter = 0;
+  char line[MAX_LINE_LEN] = {0};
+  for(; i < fsize; i++) {
+    char c = program[i];
+    if(c == EOF){
+      break;
+    }
+    if(line_counter > MAX_LINE_LEN){
+      printf("max line len of %i exceeded", MAX_LINE_LEN);
+      break;
+    }
+    if(line_counter == 0){
+      printf("> ");
+    }
 
-    char line[MAX_LINE_LEN] = {0};
-    int i = offset;
-    for (; i - offset < MAX_LINE_LEN; i++) {
-      /*char c = (char)getc(input_stream);*/
-      char c = program[i];
-      if (c == EOF || c == '\n') {
-        putchar('\n');
-        line[i - offset] = EOF;
+    line[line_counter] = c;
+    line_counter++;
+
+    putchar(c);
+
+    if(c == '\n'){
+      if (!tick(line)) {
         break;
       }
-      putchar(c);
-      line[i - offset] = c;
-    }
-    offset = i+1;
-    if (!tick(line)) {
-      break;
+      line_counter = 0;
+      memset(line, 0, sizeof(char)*MAX_LINE_LEN);
     }
   }
 
@@ -501,7 +508,6 @@ void ldr(char line[MAX_LINE_LEN]) {
 
 void str(char line[MAX_LINE_LEN]) {
   Args args = parse_args(line + CMD_LEN + 1);
-
   if (!args.is_valid) {
     return;
   }
@@ -530,9 +536,12 @@ void str(char line[MAX_LINE_LEN]) {
     }
     memory[addr] = registers[a1.reg];
   } else if (a2.addr.type == A_CONSTANT) {
+    if (a2.addr.val < 0 || a2.addr.val >= MEM_BYTES) {
+      printf("str: out of bounds memory access at address %i\n", a2.addr.val);
+      return;
+    }
     memory[a2.addr.val] = registers[a1.reg];
   }
-
   return;
 }
 
