@@ -122,6 +122,22 @@ int main(int argc, char** argv) {
     }
   }
 
+  /*
+  read the full contents from the file into memory
+  go through and find all branch labels
+  construct jump table 
+    ex: 
+      [
+        'exit': 10 // label exit means jump to line 10
+      ]
+
+  second pass
+  replace all branch labels with number, so b commands do this:
+  b 10 which means jump to line 10, which means set pc to 10
+  */
+
+  int jump_table[1000] = {0};
+
   printf("oarm v0.1\n____\n\n");
 
   bool cont = true;
@@ -255,6 +271,9 @@ CMD identify_cmd(char cmd[CMD_LEN]) {
       break;
     case ('b'<<16) | ('g'<<8) | 'e':
       return BGE;
+      break;
+    case ('b'<<16) | ('r'<<8) | 'a':
+      return BRANCH;
       break;
     case ('r'<<16) | ('p'<<8) | 'c':
       return RPC;
