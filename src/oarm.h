@@ -19,14 +19,14 @@
 #define NUM_REGISTERS 10
 #define MEM_BYTES 256
 
-int registers[NUM_REGISTERS] = {0};
-int memory[MEM_BYTES] = {0};
+static int registers[NUM_REGISTERS] = {0};
+static int memory[MEM_BYTES] = {0};
 
 /* comparison byte, -1 if lt, 0 eq, 1 gt */
-int cmp = 0;
+static int cmp = 0;
 
 /*program counter, just references the line no in asm file*/
-int pc = 0;
+static int pc = 0;
 
 typedef struct Token {
   char tok[MAX_IDENT_LEN];
@@ -121,5 +121,6 @@ void log_mem(void);
 int get_register_or_constant(Arg a);
 void print_help(void);
 void log_tokenized_program(TokenizedProgram p);
+int entry(int argc, char** argv);
 
 #endif

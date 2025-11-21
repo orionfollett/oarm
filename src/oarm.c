@@ -122,6 +122,7 @@ bool tick(Line line) {
     return cont;
   }
   CMD cmd = identify_cmd(line.tokens[0]);
+  /*
   switch (cmd) {
     case ADD:
       add_or_sub(line, true);
@@ -172,6 +173,7 @@ bool tick(Line line) {
              cmd_str[1], cmd_str[2]);
       break;
   }
+      */
   pc++;
   return cont;
 }
