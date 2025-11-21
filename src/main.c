@@ -115,8 +115,7 @@ int main(int argc, char** argv) {
   FILE* input_stream = NULL;
   if (argc <= 1) {
     print_help();
-  } 
-  else {
+  } else {
     if (strcmp("--help", argv[1]) == 0) {
       print_help();
       return 0;
@@ -135,7 +134,7 @@ int main(int argc, char** argv) {
   long fsize = ftell(input_stream);
   fseek(input_stream, 0, SEEK_SET);
   char* program = malloc((unsigned long)(fsize + 1));
-  fread(program, (unsigned long) fsize, 1, input_stream);
+  fread(program, (unsigned long)fsize, 1, input_stream);
   fclose(input_stream);
   program[fsize] = 0;
 
@@ -156,12 +155,12 @@ int main(int argc, char** argv) {
   printf("oarm v0.1\n____\n\n");
 
   int offset = 0;
-  while(true) {
+  while (true) {
     printf("> ");
 
     char line[MAX_LINE_LEN] = {0};
     int i = offset;
-    for (; i < MAX_LINE_LEN+offset; i++) {
+    for (; i < MAX_LINE_LEN + offset; i++) {
       /*char c = (char)getc(input_stream);*/
       char c = program[i];
       if (c == EOF || c == '\n') {
@@ -173,7 +172,7 @@ int main(int argc, char** argv) {
       line[i - offset] = c;
     }
     offset = i;
-    if(!tick(line)){
+    if (!tick(line)) {
       break;
     }
   }
