@@ -15,7 +15,12 @@
 
 int registers[NUM_REGISTERS] = {0};
 int memory[MEM_BYTES] = {0};
+
+/* comparison byte, -1 if lt, 0 eq, 1 gt */
 int cmp = 0;
+
+/*program counter, just references the line no in asm file*/
+int pc = 0; 
 
 typedef enum {
   ADD,
@@ -37,6 +42,7 @@ typedef enum {
   BGT,
   BEQ,
   BNE,
+  RPC
 } CMD;
 typedef int Register;
 
@@ -129,17 +135,17 @@ int main(int argc, char** argv) {
     int i = 0;
     for (; i < MAX_LINE_LEN; i++) {
       char c = (char)getc(input_stream);
-      printf("%c", c);
       if (c == EOF || c == '\n') {
+        putchar('\n');
         line[i] = EOF;
         break;
       }
+      putchar(c);
       line[i] = c;
     }
 
     cont = tick(line);
   }
-
   return 0;
 }
 
@@ -149,7 +155,6 @@ bool tick(char line[MAX_LINE_LEN]) {
   char cmd_str[CMD_LEN] = {0};
   memcpy(cmd_str, line, CMD_LEN * sizeof(char));
   CMD cmd = identify_cmd(cmd_str);
-
   switch (cmd) {
     case ADD:
       add_or_sub(line, true);
@@ -191,19 +196,29 @@ bool tick(char line[MAX_LINE_LEN]) {
     case SUB:
       add_or_sub(line, false);
       break;
+    case RPC:
+      printf("pc: %i\n", pc);
+      break;
     case UNKNOWN:
       printf("Error could not parse statement identifier: %c%c%c\n", cmd_str[0],
              cmd_str[1], cmd_str[2]);
       break;
   }
+  pc++;
   return cont;
 }
 
 CMD identify_cmd(char cmd[CMD_LEN]) {
-  int key = (cmd[0] << 16) | (cmd[1] << 8) | cmd[0];  
+  if(cmd[0] == '\n' || cmd[0] == EOF){
+    return NL;
+  }
+  int key = (cmd[0] << 16) | (cmd[1] << 8) | cmd[2];  
   switch(key){
     case ('m'<<16) | ('e'<<8) | 'm':
       return MEM;
+      break;
+    case ('m'<<16) | ('o'<<8) | 'v':
+      return MOV;
       break;
     case ('a'<<16) | ('d'<<8) | 'd':
       return ADD;
@@ -243,11 +258,10 @@ CMD identify_cmd(char cmd[CMD_LEN]) {
       break;
     case ('b'<<16) | ('g'<<8) | 'e':
       return BGE;
+      break;
+    case ('r'<<16) | ('p'<<8) | 'c':
+      return RPC;
       break;    
-  }
-  
-  if(cmd[0] == '\n' || cmd[0] == EOF){
-    return NL;
   }
   return UNKNOWN;
 }
@@ -561,7 +575,10 @@ void lsl_or_lsr(char line[MAX_LINE_LEN], bool is_left) {
 }
 
 void branch(char line[MAX_LINE_LEN], CMD command){
-
+  if(command == BNE){
+    printf("%s", line);
+  }
+  return;
 }
 
 void log_registers(void) {
