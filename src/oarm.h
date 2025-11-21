@@ -18,14 +18,17 @@
 #define NUM_REGISTERS 10
 #define MEM_BYTES 256
 
-static int registers[NUM_REGISTERS] = {0};
-static int memory[MEM_BYTES] = {0};
+typedef struct State {
+  int registers[NUM_REGISTERS] = {0};
+  int memory[MEM_BYTES] = {0};
 
-/* comparison byte, -1 if lt, 0 eq, 1 gt */
-static int cmp = 0;
+  /* comparison byte, -1 if lt, 0 eq, 1 gt */
+  int cmp = 0;
 
-/*program counter, just references the line no in asm file*/
-static int pc = 0;
+  /*program counter, just references the line no in asm file*/
+  int pc = 0;
+  bool cont = true;
+} State;
 
 typedef struct Token {
   char tok[MAX_IDENT_LEN];
@@ -100,23 +103,23 @@ typedef struct ArgValidations {
   ArgValidation validations[3];
 } ArgValidations;
 
-/*Declarations*/
-bool tick(Line line);
+State tick(State s, Line line);
 CMD identify_cmd(Token t);
 
-Args parse_args(char line[ARGS_LEN]);
+Args parse_args(Line line);
 int parse_int(const char* num, int len);
 TokenizedProgram tokenize(char* str, int size);
 
-void mov(char line[MAX_LINE_LEN]);
-void ldr(char line[MAX_LINE_LEN]);
-void str(char line[MAX_LINE_LEN]);
-void add_or_sub(char line[MAX_LINE_LEN], bool is_add);
-void branch(char line[MAX_LINE_LEN], CMD command);
-void lsl_or_lsr(char line[MAX_LINE_LEN], bool is_left);
+State mov(State s, Line line);
+State ldr(State s, Line line);
+State str(State s, Line line);
+State add_or_sub(State s, Line line, bool is_add);
+State branch(State s, Line line, CMD command);
+State lsl_or_lsr(State s, Line line, bool is_left);
+
 bool validate_args(Args args, ArgValidations validations);
-void log_registers(void);
-void log_mem(void);
+void log_registers(State s);
+void log_mem(State s);
 int get_register_or_constant(Arg a);
 void print_help(void);
 void log_tokenized_program(TokenizedProgram p);

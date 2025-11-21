@@ -34,9 +34,9 @@ int entry(int argc, char** argv) {
   TokenizedProgram program_tokens = tokenize(program, fsize);
   log_tokenized_program(program_tokens);
 
-  bool cont = true;
-  while (cont) {
-    cont = tick(program_tokens.lines[pc]);
+  State s;
+  while (s.cont) {
+    s = tick(s, program_tokens.lines[s.pc]);
   }
 
   free(program_tokens.lines);
@@ -115,17 +115,16 @@ TokenizedProgram tokenize(char* str, int length) {
   return program;
 }
 
-bool tick(Line line) {
+State tick(State s, Line line) {
   /*Evaluate one line of asm.*/
-  bool cont = true;
   if (line.len < 1) {
-    return cont;
+    printf("warning:tick: empty line\n");
+    return s;
   }
   CMD cmd = identify_cmd(line.tokens[0]);
-  /*
   switch (cmd) {
     case ADD:
-      add_or_sub(line, true);
+      s = add_or_sub(s, line, true);
       break;
     case BRANCH:
     case BEQ:
@@ -134,48 +133,48 @@ bool tick(Line line) {
     case BLT:
     case BGE:
     case BGT:
-      branch(line, cmd);
+      s = branch(s, line, cmd);
       break;
     case LDR:
-      ldr(line);
+      s = ldr(s, line);
       break;
     case LSL:
-      lsl_or_lsr(line, true);
+      s = lsl_or_lsr(s, line, true);
       break;
     case LSR:
-      lsl_or_lsr(line, false);
+      s = lsl_or_lsr(s, line, false);
       break;
     case MEM:
-      log_mem();
+      log_mem(s);
       break;
     case MOV:
-      mov(line);
+      s = mov(s, line);
       break;
     case REG:
-      log_registers();
+      log_registers(s);
       break;
     case RET:
-      cont = false;
+      s.cont = false;
       break;
     case NL:
-      return false;
+      s.cont = false;
     case STR:
-      str(line);
+      s = str(s, line);
       break;
     case SUB:
-      add_or_sub(line, false);
+      s = add_or_sub(s, line, false);
       break;
     case RPC:
       printf("pc: %i\n", pc);
       break;
     case UNKNOWN:
-      printf("Error could not parse statement identifier: %c%c%c\n", cmd_str[0],
-             cmd_str[1], cmd_str[2]);
+      Token t = line.tokens[0];
+      printf("Error could not parse statement identifier: %c%c%c\n", t.tok[0],
+             t.tok[1], t.tok[2]);
       break;
   }
-      */
-  pc++;
-  return cont;
+  s.pc++;
+  return s;
 }
 
 CMD identify_cmd(Token t) {
@@ -265,14 +264,9 @@ int parse_int(const char* num, int len) {
   return result;
 }
 
-/*TODO: clean this up,
-
-do a few passes, one to cleanup all whitespace,
-then split into tokens
-then identify tokens
-then do the final parse
-*/
-Args parse_args(char line[ARGS_LEN]) {
+/*TODO: clean this up to use tokens
+ */
+Args parse_args(Line line) {
   Args args;
   args.count = 0;
   args.is_valid = true;
@@ -371,8 +365,8 @@ Args parse_args(char line[ARGS_LEN]) {
   return args;
 }
 
-void mov(char line[MAX_LINE_LEN]) {
-  Args args = parse_args(line + CMD_LEN + 1);
+State mov(State s, Line line) {
+  Args args = parse_args(line);
   if (!args.is_valid) {
     return;
   }
@@ -393,14 +387,14 @@ void mov(char line[MAX_LINE_LEN]) {
   Arg a1 = args.args[0];
   Arg a2 = args.args[1];
 
-  int val = get_register_or_constant(a2);
+  int val = get_register_or_constant(s, a2);
 
-  registers[a1.reg] = val;
-  return;
+  s.registers[a1.reg] = val;
+  return s;
 }
 
-void ldr(char line[MAX_LINE_LEN]) {
-  Args args = parse_args(line + CMD_LEN + 1);
+State ldr(State s, Line line) {
+  Args args = parse_args(line);
 
   if (!args.is_valid) {
     return;
@@ -423,23 +417,24 @@ void ldr(char line[MAX_LINE_LEN]) {
   Arg a2 = args.args[1];
 
   if (a2.addr.type == A_REGISTER) {
-    int addr = registers[a2.addr.val];
+    int addr = s.registers[a2.addr.val];
     if (addr < 0 || addr >= MEM_BYTES) {
       printf("ldr: out of bounds memory access at address %i\n", addr);
       return;
     }
-    registers[a1.reg] = memory[addr];
+    s.registers[a1.reg] = s.memory[addr];
   } else if (a2.addr.type == A_CONSTANT) {
-    registers[a1.reg] = memory[a2.addr.val];
+    s.registers[a1.reg] = s.memory[a2.addr.val];
   }
 
   return;
 }
 
-void str(char line[MAX_LINE_LEN]) {
-  Args args = parse_args(line + CMD_LEN + 1);
+State str(State s, Line line) {
+  Args args = parse_args(line);
   if (!args.is_valid) {
-    return;
+    s.cont = false;
+    return s;
   }
 
   ArgValidations v;
@@ -452,33 +447,37 @@ void str(char line[MAX_LINE_LEN]) {
   v.validations[0] = first_arg;
   v.validations[1] = second_arg;
   if (!validate_args(args, v)) {
-    return;
+    s.cont = false;
+    return s;
   }
 
   Arg a1 = args.args[0];
   Arg a2 = args.args[1];
 
   if (a2.addr.type == A_REGISTER) {
-    int addr = registers[a2.addr.val];
+    int addr = s.registers[a2.addr.val];
     if (addr < 0 || addr >= MEM_BYTES) {
       printf("str: out of bounds memory access at address %i\n", addr);
-      return;
+      s.cont = false;
+      return s;
     }
-    memory[addr] = registers[a1.reg];
+    s.memory[addr] = s.registers[a1.reg];
   } else if (a2.addr.type == A_CONSTANT) {
     if (a2.addr.val < 0 || a2.addr.val >= MEM_BYTES) {
       printf("str: out of bounds memory access at address %i\n", a2.addr.val);
-      return;
+      s.cont = false;
+      return s;
     }
-    memory[a2.addr.val] = registers[a1.reg];
+    s.memory[a2.addr.val] = s.registers[a1.reg];
   }
-  return;
+  return s;
 }
 
-void add_or_sub(char line[MAX_LINE_LEN], bool is_add) {
+State add_or_sub(State s, Line line, bool is_add) {
   Args args = parse_args(line);
   if (!args.is_valid) {
-    return;
+    s.cont = false;
+    return s;
   }
 
   ArgValidations v;
@@ -498,27 +497,29 @@ void add_or_sub(char line[MAX_LINE_LEN], bool is_add) {
   v.validations[1] = second_arg;
   v.validations[2] = third_arg;
   if (!validate_args(args, v)) {
-    return;
+    s.cont = false;
+    return s;
   }
 
   Arg a1 = args.args[0];
   Arg a2 = args.args[1];
   Arg a3 = args.args[2];
 
-  int val1 = get_register_or_constant(a2);
-  int val2 = get_register_or_constant(a3);
+  int val1 = get_register_or_constant(s, a2);
+  int val2 = get_register_or_constant(s, a3);
 
   if (!is_add) {
     val2 = val2 * -1;
   }
-  registers[a1.reg] = val1 + val2;
-  return;
+  s.registers[a1.reg] = val1 + val2;
+  return s;
 }
 
-void lsl_or_lsr(char line[MAX_LINE_LEN], bool is_left) {
+State lsl_or_lsr(State s, Line line, bool is_left) {
   Args args = parse_args(line);
   if (!args.is_valid) {
-    return;
+    s.cont = false;
+    return s;
   }
 
   ArgValidations v;
@@ -538,36 +539,37 @@ void lsl_or_lsr(char line[MAX_LINE_LEN], bool is_left) {
   v.validations[1] = second_arg;
   v.validations[2] = third_arg;
   if (!validate_args(args, v)) {
-    return;
+    s.cont = false;
+    return s;
   }
 
   Arg a1 = args.args[0];
   Arg a2 = args.args[1];
   Arg a3 = args.args[2];
 
-  int val1 = get_register_or_constant(a2);
-  int val2 = get_register_or_constant(a3);
+  int val1 = get_register_or_constant(s, a2);
+  int val2 = get_register_or_constant(s, a3);
 
   if (is_left) {
-    registers[a1.reg] = val2 << val1;
+    s.registers[a1.reg] = val2 << val1;
   } else {
-    registers[a1.reg] = val2 >> val1;
+    s.registers[a1.reg] = val2 >> val1;
   }
-  return;
+  return s;
 }
 
-void branch(char line[MAX_LINE_LEN], CMD command) {
+State branch(State s, Line line, CMD command) {
   if (command == BNE) {
     printf("%s", line);
   }
-  return;
+  return s;
 }
 
 void log_registers(void) {
   int i = 0;
   printf("registers: [");
   for (; i < NUM_REGISTERS; i++) {
-    printf("%i, ", registers[i]);
+    printf("%i, ", s.registers[i]);
   }
   printf("]\n");
 }
@@ -579,7 +581,7 @@ void log_mem(void) {
     if (i % 48 == 0) {
       printf("\n");
     }
-    printf("%i, ", memory[i]);
+    printf("%i, ", s.memory[i]);
   }
   printf("]\n");
 }
@@ -619,10 +621,10 @@ bool validate_args(Args args, ArgValidations validations) {
   return true;
 }
 
-int get_register_or_constant(Arg a) {
+int get_register_or_constant(State s, Arg a) {
   int val = 0;
   if (a.tag == REGISTER) {
-    val = registers[a.reg];
+    val = s.registers[a.reg];
   } else if (a.tag == CONSTANT) {
     val = a.constant;
   }
