@@ -9,6 +9,7 @@
 
 #define MAX_LINE_LEN 128
 #define MAX_IDENT_LEN 32
+#define MAX_TOKENS_PER_LINE 4
 #define CMD_LEN 3
 #define ARGS_LEN (MAX_LINE_LEN - CMD_LEN - 1)
 #define NUM_REGISTERS 10
@@ -22,6 +23,21 @@ int cmp = 0;
 
 /*program counter, just references the line no in asm file*/
 int pc = 0;
+
+typedef struct Token {
+  char tok[MAX_IDENT_LEN];
+  int len;
+} Token;
+
+typedef struct Line {
+  Token tokens[MAX_TOKENS_PER_LINE];
+  int len;
+} Line;
+
+typedef struct TokenizedProgram {
+  Line* lines;
+  int len;
+} TokenizedProgram;
 
 typedef enum {
   ADD,
@@ -86,6 +102,7 @@ CMD identify_cmd(char cmd[CMD_LEN]);
 
 Args parse_args(char line[ARGS_LEN]);
 int parse_int(const char* num, int len);
+TokenizedProgram tokenize(char* str, int size);
 
 void mov(char line[MAX_LINE_LEN]);
 void ldr(char line[MAX_LINE_LEN]);
@@ -112,6 +129,8 @@ void print_help(void) {
 }
 
 int main(int argc, char** argv) {
+  printf("oarm v0.1\n____\n\n");
+
   FILE* input_stream = NULL;
   if (argc <= 1) {
     print_help();
@@ -128,8 +147,9 @@ int main(int argc, char** argv) {
     }
   }
 
+  /*Copy the file into memory*/
   /*fun fact, there is a race condition between getting size of file and
-   * allocating memory*/
+   * allocating memory. Whatever though, don't run the assembler while editing the file.*/
   fseek(input_stream, 0, SEEK_END);
   long fsize = ftell(input_stream);
   fseek(input_stream, 0, SEEK_SET);
@@ -139,21 +159,22 @@ int main(int argc, char** argv) {
   program[fsize] = EOF;
 
   /*
-  read the full contents from the file into memory
-  go through and find all branch labels
-  construct jump table
-    ex:
-      [
-        'exit': 10 // label exit means jump to line 10
-      ]
-
-  second pass
-  replace all branch labels with number, so b commands do this:
-  b 10 which means jump to line 10, which means set pc to 10
+  First pass:
+  - squash white space - not needed for now, assume white space is good
+  - split into lines (makes jumping easier)
+  - tokenize each line (split lines by separators, eliminates whitespace, allows parsing individual tokens that you know are correct)
+  - collect label declarations, label uses
+  - replace label uses with absolute jump position
   */
 
-  printf("oarm v0.1\n____\n\n");
-
+  /* squash seps
+  
+  ' ' -> squash multi into single whitespace
+  ' ,' -> squash into ','
+  ', ' -> squash into ','
+  ':', '[', ']'
+  */
+  
   int i = 0;
   int line_counter = 0;
   char line[MAX_LINE_LEN] = {0};
@@ -186,6 +207,34 @@ int main(int argc, char** argv) {
 
   free(program);
   return 0;
+}
+
+TokenizedProgram tokenize(char* str, int length) {
+  int i  = 0;
+  TokenizedProgram program;
+  program.len=0;
+  program.lines = (Line*)malloc(sizeof(Line));
+  int program_size = 1;
+
+  int line_counter = 0;
+  Line line;
+  line.len = 0;
+
+  for(; i < length; i++) {
+    char c = str[i];
+    
+    program.lines[line_counter].tokens
+    switch(c){
+      case '\n':
+        line.
+        line_counter++;
+      case ' ':
+      case ',':
+      case ':':
+        program.lines[line_counter].len++;
+        break;
+    }
+  }
 }
 
 bool tick(char line[MAX_LINE_LEN]) {

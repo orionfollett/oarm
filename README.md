@@ -37,7 +37,7 @@ run asm/all.s
 ```
 
 Next project...
-A compiler that generates my OARM asm from a simpler high level language?
+A compiler that generates my OARM asm from a simpler high level language? (use zig?)
 
 
 TODO:
