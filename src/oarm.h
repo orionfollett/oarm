@@ -19,15 +19,15 @@
 #define MEM_BYTES 256
 
 typedef struct State {
-  int registers[NUM_REGISTERS] = {0};
-  int memory[MEM_BYTES] = {0};
+  int registers[NUM_REGISTERS];
+  int memory[MEM_BYTES];
 
   /* comparison byte, -1 if lt, 0 eq, 1 gt */
-  int cmp = 0;
+  int cmp;
 
   /*program counter, just references the line no in asm file*/
-  int pc = 0;
-  bool cont = true;
+  int pc;
+  bool cont;
 } State;
 
 typedef struct Token {
@@ -120,7 +120,7 @@ State lsl_or_lsr(State s, Line line, bool is_left);
 bool validate_args(Args args, ArgValidations validations);
 void log_registers(State s);
 void log_mem(State s);
-int get_register_or_constant(Arg a);
+int get_register_or_constant(State s, Arg a);
 void print_help(void);
 void log_tokenized_program(TokenizedProgram p);
 int entry(int argc, char** argv);
