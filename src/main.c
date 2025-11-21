@@ -115,6 +115,8 @@ void log_registers(void);
 void log_mem(void);
 int get_register_or_constant(Arg a);
 void print_help(void);
+void log_tokenized_program(TokenizedProgram p);
+
 /*Implementations*/
 
 void print_help(void) {
@@ -159,23 +161,9 @@ int main(int argc, char** argv) {
   fclose(input_stream);
   program[fsize] = EOF;
 
-  /*
-  First pass:
-  - squash white space - not needed for now, assume white space is good
-  - split into lines (makes jumping easier)
-  - tokenize each line (split lines by separators, eliminates whitespace, allows
-  parsing individual tokens that you know are correct)
-  - collect label declarations, label uses
-  - replace label uses with absolute jump position
-  */
-
-  /* squash seps
-
-  ' ' -> squash multi into single whitespace
-  ' ,' -> squash into ','
-  ', ' -> squash into ','
-  ':', '[', ']'
-  */
+   
+  TokenizedProgram program_tokens = tokenize(program, fsize);
+  log_tokenized_program(program_tokens); 
 
   int i = 0;
   int line_counter = 0;
@@ -220,7 +208,6 @@ TokenizedProgram tokenize(char* str, int length) {
   Token t;
   t.len = 0;
 
-  int line_counter = 0;
   int i = 0;
   for (; i < length; i++) {
     char c = str[i];
@@ -228,21 +215,36 @@ TokenizedProgram tokenize(char* str, int length) {
     switch (c) {
       case '\n':
         if (t.len > 0) {
-          line_counter++;
+          program.len++;
         }
       case ' ':
       case ',':
       case ':':
-        program.lines[line_counter].tokens[program.lines[line_counter].len] = t;
-        program.lines[line_counter].len++;
+        bool is_token_empty = t.len==0;
+        if (is_token_empty) {
+          break;
+        }
+        /*Push token onto program struct.*/
+        int li = program.len;
+        int num_tokens = program.lines[li].len;
+        program.lines[li].tokens[num_tokens] = t;
+        program.lines[li].len = num_tokens + 1;
+
+        /* reset token*/
         t.len = 0;
         memset(t.tok, 0, sizeof(char) * MAX_IDENT_LEN);
         break;
       default:
+        if (t.len >= MAX_IDENT_LEN) {
+          printf("Warning: max identifier length of %i exceeded",
+                 MAX_IDENT_LEN);
+          break;
+        }
         t.tok[t.len] = c;
         t.len++;
     }
   }
+  return program;
 }
 
 bool tick(char line[MAX_LINE_LEN]) {
@@ -754,4 +756,26 @@ int get_register_or_constant(Arg a) {
     val = a.constant;
   }
   return val;
+}
+
+void log_tokenized_program(TokenizedProgram p){
+  printf("\n\nTokenized Program:\n");
+  printf("Line count: %i\n", p.len);
+  
+  int i=0;
+  for(; i < p.len; i++){
+    putchar('\n');
+    int j = 0;
+    Line line = p.lines[i];
+    printf("%i. (Toks: %i):", i, line.len);
+    for(; j < line.len; j++){
+      int t = 0;
+      putchar(' ');
+      Token token = line.tokens[j];
+      for(; t < token.len; t++){
+        putchar(token.tok[t]);
+      }
+    }
+  }
+  printf("\n\n");
 }
