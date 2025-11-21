@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
 
     char line[MAX_LINE_LEN] = {0};
     int i = offset;
-    for (; i < MAX_LINE_LEN + offset; i++) {
+    for (; i - offset < MAX_LINE_LEN; i++) {
       /*char c = (char)getc(input_stream);*/
       char c = program[i];
       if (c == EOF || c == '\n') {
@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
       putchar(c);
       line[i - offset] = c;
     }
-    offset = i;
+    offset = i+1;
     if (!tick(line)) {
       break;
     }
