@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define bool int
@@ -20,7 +21,7 @@ int memory[MEM_BYTES] = {0};
 int cmp = 0;
 
 /*program counter, just references the line no in asm file*/
-int pc = 0; 
+int pc = 0;
 
 typedef enum {
   ADD,
@@ -96,22 +97,28 @@ bool validate_args(Args args, ArgValidations validations);
 void log_registers(void);
 void log_mem(void);
 int get_register_or_constant(Arg a);
-
+void print_help(void);
 /*Implementations*/
 
-int main(int argc, char** argv) {
-  FILE* input_stream = stdin;
+void print_help(void) {
+  printf(
+      "Usage: oarm [FILE]\n"
+      "\n"
+      "Examples:\n"
+      "  oarm program.s      Assemble and run program.s\n"
+      "\n"
+      "Options:\n"
+      "  --help              Show this help message and exit\n");
+}
 
-  if (argc > 1) {
+int main(int argc, char** argv) {
+  FILE* input_stream = NULL;
+  if (argc <= 1) {
+    print_help();
+  } 
+  else {
     if (strcmp("--help", argv[1]) == 0) {
-      printf(
-          "Usage: oarm [FILE]\n"
-          "\n"
-          "Examples:\n"
-          "  oarm program.s      Assemble and run program.s\n"
-          "\n"
-          "Options:\n"
-          "  --help              Show this help message and exit\n");
+      print_help();
       return 0;
     } else {
       input_stream = fopen(argv[1], "r");
@@ -122,11 +129,21 @@ int main(int argc, char** argv) {
     }
   }
 
+  /*fun fact, there is a race condition between getting size of file and
+   * allocating memory*/
+  fseek(input_stream, 0, SEEK_END);
+  long fsize = ftell(input_stream);
+  fseek(input_stream, 0, SEEK_SET);
+  char* program = malloc((unsigned long)(fsize + 1));
+  fread(program, (unsigned long) fsize, 1, input_stream);
+  fclose(input_stream);
+  program[fsize] = 0;
+
   /*
   read the full contents from the file into memory
   go through and find all branch labels
-  construct jump table 
-    ex: 
+  construct jump table
+    ex:
       [
         'exit': 10 // label exit means jump to line 10
       ]
@@ -136,28 +153,32 @@ int main(int argc, char** argv) {
   b 10 which means jump to line 10, which means set pc to 10
   */
 
-  int jump_table[1000] = {0};
-
   printf("oarm v0.1\n____\n\n");
 
-  bool cont = true;
-  while (cont) {
+  int offset = 0;
+  while(true) {
     printf("> ");
+
     char line[MAX_LINE_LEN] = {0};
-    int i = 0;
-    for (; i < MAX_LINE_LEN; i++) {
-      char c = (char)getc(input_stream);
+    int i = offset;
+    for (; i < MAX_LINE_LEN+offset; i++) {
+      /*char c = (char)getc(input_stream);*/
+      char c = program[i];
       if (c == EOF || c == '\n') {
         putchar('\n');
-        line[i] = EOF;
+        line[i - offset] = EOF;
         break;
       }
       putchar(c);
-      line[i] = c;
+      line[i - offset] = c;
     }
-
-    cont = tick(line);
+    offset = i;
+    if(!tick(line)){
+      break;
+    }
   }
+
+  free(program);
   return 0;
 }
 
@@ -222,62 +243,62 @@ bool tick(char line[MAX_LINE_LEN]) {
 }
 
 CMD identify_cmd(char cmd[CMD_LEN]) {
-  if(cmd[0] == '\n' || cmd[0] == EOF){
+  if (cmd[0] == '\n' || cmd[0] == EOF) {
     return NL;
   }
-  int key = (cmd[0] << 16) | (cmd[1] << 8) | cmd[2];  
-  switch(key){
-    case ('m'<<16) | ('e'<<8) | 'm':
+  int key = (cmd[0] << 16) | (cmd[1] << 8) | cmd[2];
+  switch (key) {
+    case ('m' << 16) | ('e' << 8) | 'm':
       return MEM;
       break;
-    case ('m'<<16) | ('o'<<8) | 'v':
+    case ('m' << 16) | ('o' << 8) | 'v':
       return MOV;
       break;
-    case ('a'<<16) | ('d'<<8) | 'd':
+    case ('a' << 16) | ('d' << 8) | 'd':
       return ADD;
       break;
-    case ('r'<<16) | ('e'<<8) | 'g':
+    case ('r' << 16) | ('e' << 8) | 'g':
       return REG;
       break;
-    case ('r'<<16) | ('e'<<8) | 't':
+    case ('r' << 16) | ('e' << 8) | 't':
       return RET;
       break;
-    case ('l'<<16) | ('s'<<8) | 'l':
+    case ('l' << 16) | ('s' << 8) | 'l':
       return LSL;
       break;
-    case ('l'<<16) | ('s'<<8) | 'r':
+    case ('l' << 16) | ('s' << 8) | 'r':
       return LSR;
       break;
-    case ('s'<<16) | ('u'<<8) | 'b':
+    case ('s' << 16) | ('u' << 8) | 'b':
       return SUB;
       break;
-    case ('s'<<16) | ('t'<<8) | 'r':
+    case ('s' << 16) | ('t' << 8) | 'r':
       return STR;
       break;
-    case ('b'<<16) | ('e'<<8) | 'q':
+    case ('b' << 16) | ('e' << 8) | 'q':
       return BEQ;
       break;
-    case ('b'<<16) | ('n'<<8) | 'e':
+    case ('b' << 16) | ('n' << 8) | 'e':
       return BNE;
       break;
-    case ('b'<<16) | ('l'<<8) | 't':
+    case ('b' << 16) | ('l' << 8) | 't':
       return BLT;
       break;
-    case ('b'<<16) | ('l'<<8) | 'e':
+    case ('b' << 16) | ('l' << 8) | 'e':
       return BLE;
       break;
-    case ('b'<<16) | ('g'<<8) | 't':
+    case ('b' << 16) | ('g' << 8) | 't':
       return BGT;
       break;
-    case ('b'<<16) | ('g'<<8) | 'e':
+    case ('b' << 16) | ('g' << 8) | 'e':
       return BGE;
       break;
-    case ('b'<<16) | ('r'<<8) | 'a':
+    case ('b' << 16) | ('r' << 8) | 'a':
       return BRANCH;
       break;
-    case ('r'<<16) | ('p'<<8) | 'c':
+    case ('r' << 16) | ('p' << 8) | 'c':
       return RPC;
-      break;    
+      break;
   }
   return UNKNOWN;
 }
@@ -308,7 +329,7 @@ int parse_int(const char* num, int len) {
   return result;
 }
 
-/*TODO: clean this up, 
+/*TODO: clean this up,
 
 do a few passes, one to cleanup all whitespace,
 then split into tokens
@@ -597,8 +618,8 @@ void lsl_or_lsr(char line[MAX_LINE_LEN], bool is_left) {
   return;
 }
 
-void branch(char line[MAX_LINE_LEN], CMD command){
-  if(command == BNE){
+void branch(char line[MAX_LINE_LEN], CMD command) {
+  if (command == BNE) {
     printf("%s", line);
   }
   return;

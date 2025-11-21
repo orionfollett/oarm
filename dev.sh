@@ -26,14 +26,9 @@ build(){
     $CC $CFLAGS src/main.c -o $BUILD_DIR/$APP
 }
 
-runf(){
-    build || return
-    $BUILD_DIR/$APP "$1"
-}
-
 run(){
     build || return
-    $BUILD_DIR/$APP
+    $BUILD_DIR/$APP "$1"
 }
 
 fmt() {

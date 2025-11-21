@@ -1,8 +1,8 @@
-Orion's Subset of ARM Assembly Interpreter
+Orion's Subset of ARM Assembly
 
 Goal:
 - continue practicing programming with manual memory management
-- learn how to write interpreters
+- work on parsing
 - learn more about assembly and how computers work
 - develop mastery in a low level language
 
@@ -13,7 +13,7 @@ Why C?
 
 Project:
 
-Implement a REPL and file reading interpreter that supports a small subset of ARM assembly.
+CPU emulator that supports a small subset of ARM assembly.
 
 ARM supported:
 
@@ -23,12 +23,17 @@ ARM supported:
 - add, sub
 - lsl, lsr
 - cmp
-- blt, bgt, ble, bge
+- blt, ble, bgt, bge, b, beq, bne
+
+My extensions for debugging:
+rpc - prints program counter
+reg - prints all registers
+mem - prints all memory
 
 How to run:
 ```
 source dev.sh
-run
+run asm/all.s
 ```
 
 Next project...
