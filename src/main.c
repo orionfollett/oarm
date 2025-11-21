@@ -16,7 +16,20 @@
 int registers[NUM_REGISTERS] = {0};
 int memory[MEM_BYTES] = {0};
 
-typedef enum { ADD, LDR, LSL, LSR, MEM, MOV, REG, RET, STR, SUB, UNKNOWN } CMD;
+typedef enum {
+  ADD,
+  LDR,
+  LSL,
+  LSR,
+  MEM,
+  MOV,
+  REG,
+  RET,
+  STR,
+  SUB,
+  NL,
+  UNKNOWN
+} CMD;
 typedef int Register;
 
 typedef enum { A_CONSTANT, A_REGISTER } AddressType;
@@ -107,6 +120,7 @@ int main(int argc, char** argv) {
     int i = 0;
     for (; i < MAX_LINE_LEN; i++) {
       char c = (char)getc(input_stream);
+      printf("%c", c);
       if (c == EOF || c == '\n') {
         line[i] = EOF;
         break;
@@ -150,7 +164,11 @@ bool tick(char line[MAX_LINE_LEN]) {
       log_registers();
       break;
     case RET:
+      cont = false;
       break;
+    case NL:
+
+      return false;
     case STR:
       str(line);
       break;
@@ -193,6 +211,10 @@ CMD identify_cmd(char cmd[CMD_LEN]) {
         return SUB;
       }
       return STR;
+    case '\n':
+      return NL;
+    case EOF:
+      return NL;
   }
   return UNKNOWN;
 }
@@ -343,7 +365,7 @@ void mov(char line[MAX_LINE_LEN]) {
 
   Arg a1 = args.args[0];
   Arg a2 = args.args[1];
-  
+
   int val = get_register_or_constant(a2);
 
   registers[a1.reg] = val;
@@ -561,7 +583,7 @@ bool validate_args(Args args, ArgValidations validations) {
   return true;
 }
 
-int get_register_or_constant(Arg a){
+int get_register_or_constant(Arg a) {
   int val = 0;
   if (a.tag == REGISTER) {
     val = registers[a.reg];
