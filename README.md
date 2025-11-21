@@ -33,3 +33,19 @@ run
 
 Next project...
 A compiler that generates my OARM asm from a simpler high level language?
+
+
+TODO:
+Branch design:
+
+1. load all the asm (no interpreter/REPL anymore, only reading from file) (finally some dynamic memory!)
+
+first pass through asm:
+    - normalize whitespace # TODO
+    - store all branch labels along with line num in a jump table
+
+- pc initializes to 0
+- increment pc on each tick
+- each tick use the pc to decide which line to execute
+- branch instructions modify the pc
+- branch instructions reference labels, look up the label, change pc to eq that num in the jump table

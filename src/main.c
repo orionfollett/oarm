@@ -107,12 +107,8 @@ int main(int argc, char** argv) {
       printf(
           "Usage: oarm [FILE]\n"
           "\n"
-          "If FILE is provided, oarm will assemble and run it.\n"
-          "If no FILE is given, oarm starts in interactive REPL mode.\n"
-          "\n"
           "Examples:\n"
           "  oarm program.s      Assemble and run program.s\n"
-          "  oarm                Start REPL\n"
           "\n"
           "Options:\n"
           "  --help              Show this help message and exit\n");
@@ -167,6 +163,7 @@ bool tick(char line[MAX_LINE_LEN]) {
     case BGE:
     case BGT:
       branch(line, cmd);
+      break;
     case LDR:
       ldr(line);
       break;
@@ -292,6 +289,13 @@ int parse_int(const char* num, int len) {
   return result;
 }
 
+/*TODO: clean this up, 
+
+do a few passes, one to cleanup all whitespace,
+then split into tokens
+then identify tokens
+then do the final parse
+*/
 Args parse_args(char line[ARGS_LEN]) {
   Args args;
   args.count = 0;
