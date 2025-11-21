@@ -1,7 +1,6 @@
 #ifndef OARM_H
 #define OARM_H
 
-
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

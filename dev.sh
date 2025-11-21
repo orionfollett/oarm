@@ -40,5 +40,5 @@ test(){
 }
 
 fmt() {
-    clang-format --style Chromium -i $SRC_DIR/*.c 2>/dev/null || true
+    clang-format --style Chromium -i $SRC_DIR/*.c $SRC_DIR/*.h 2>/dev/null || true
 }
