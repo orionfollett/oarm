@@ -15,6 +15,7 @@
 
 int registers[NUM_REGISTERS] = {0};
 int memory[MEM_BYTES] = {0};
+int cmp = 0;
 
 typedef enum {
   ADD,
@@ -28,7 +29,14 @@ typedef enum {
   STR,
   SUB,
   NL,
-  UNKNOWN
+  UNKNOWN,
+  BRANCH,
+  BLE,
+  BGE,
+  BLT,
+  BGT,
+  BEQ,
+  BNE,
 } CMD;
 typedef int Register;
 
@@ -76,6 +84,7 @@ void mov(char line[MAX_LINE_LEN]);
 void ldr(char line[MAX_LINE_LEN]);
 void str(char line[MAX_LINE_LEN]);
 void add_or_sub(char line[MAX_LINE_LEN], bool is_add);
+void branch(char line[MAX_LINE_LEN], CMD command);
 void lsl_or_lsr(char line[MAX_LINE_LEN], bool is_left);
 bool validate_args(Args args, ArgValidations validations);
 void log_registers(void);
@@ -145,6 +154,14 @@ bool tick(char line[MAX_LINE_LEN]) {
     case ADD:
       add_or_sub(line, true);
       break;
+    case BRANCH:
+    case BEQ:
+    case BNE:
+    case BLE:
+    case BLT:
+    case BGE:
+    case BGT:
+      branch(line, cmd);
     case LDR:
       ldr(line);
       break;
@@ -167,7 +184,6 @@ bool tick(char line[MAX_LINE_LEN]) {
       cont = false;
       break;
     case NL:
-
       return false;
     case STR:
       str(line);
@@ -184,37 +200,54 @@ bool tick(char line[MAX_LINE_LEN]) {
 }
 
 CMD identify_cmd(char cmd[CMD_LEN]) {
-  switch (cmd[0]) {
-    case 'm':
-      if (cmd[1] == 'e' && cmd[2] == 'm') {
-        return MEM;
-      }
-      return MOV;
-    case 'a':
+  int key = (cmd[0] << 16) | (cmd[1] << 8) | cmd[0];  
+  switch(key){
+    case ('m'<<16) | ('e'<<8) | 'm':
+      return MEM;
+      break;
+    case ('a'<<16) | ('d'<<8) | 'd':
       return ADD;
-    case 'r':
-      if (cmd[1] == 'e' && cmd[2] == 'g') {
-        return REG;
-      }
+      break;
+    case ('r'<<16) | ('e'<<8) | 'g':
+      return REG;
+      break;
+    case ('r'<<16) | ('e'<<8) | 't':
       return RET;
-    case 'l':
-      if (cmd[1] == 's') {
-        if (cmd[2] == 'l') {
-          return LSL;
-        } else if (cmd[2] == 'r') {
-          return LSR;
-        }
-      }
-      return LDR;
-    case 's':
-      if (cmd[1] == 'u' && cmd[2] == 'b') {
-        return SUB;
-      }
+      break;
+    case ('l'<<16) | ('s'<<8) | 'l':
+      return LSL;
+      break;
+    case ('l'<<16) | ('s'<<8) | 'r':
+      return LSR;
+      break;
+    case ('s'<<16) | ('u'<<8) | 'b':
+      return SUB;
+      break;
+    case ('s'<<16) | ('t'<<8) | 'r':
       return STR;
-    case '\n':
-      return NL;
-    case EOF:
-      return NL;
+      break;
+    case ('b'<<16) | ('e'<<8) | 'q':
+      return BEQ;
+      break;
+    case ('b'<<16) | ('n'<<8) | 'e':
+      return BNE;
+      break;
+    case ('b'<<16) | ('l'<<8) | 't':
+      return BLT;
+      break;
+    case ('b'<<16) | ('l'<<8) | 'e':
+      return BLE;
+      break;
+    case ('b'<<16) | ('g'<<8) | 't':
+      return BGT;
+      break;
+    case ('b'<<16) | ('g'<<8) | 'e':
+      return BGE;
+      break;    
+  }
+  
+  if(cmd[0] == '\n' || cmd[0] == EOF){
+    return NL;
   }
   return UNKNOWN;
 }
@@ -525,6 +558,10 @@ void lsl_or_lsr(char line[MAX_LINE_LEN], bool is_left) {
     registers[a1.reg] = val2 >> val1;
   }
   return;
+}
+
+void branch(char line[MAX_LINE_LEN], CMD command){
+
 }
 
 void log_registers(void) {
