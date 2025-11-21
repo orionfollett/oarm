@@ -200,22 +200,29 @@ int main(int argc, char** argv) {
 }
 
 TokenizedProgram tokenize(char* str, int length) {
-  int program_size = 1;
+  /* TODO: dynamic resize the lines param if program is too big.*/
+  int program_size = 2;
   TokenizedProgram program;
   program.len = 0;
   program.lines = (Line*)malloc(program_size * sizeof(Line));
-
+  memset(program.lines, 0, program_size * sizeof(Line));
   Token t;
   t.len = 0;
 
   int i = 0;
   for (; i < length; i++) {
     char c = str[i];
+    int li = program.len;
+    int num_tokens = program.lines[li].len;
 
     switch (c) {
       case '\n':
-        if (t.len > 0) {
+        if (num_tokens > 0) {
           program.len++;
+          if(program.len == program_size){
+            program_size = program_size * 2;
+            program.lines = realloc(program.lines, program_size * sizeof(Line));
+          }
         }
       case ' ':
       case ',':
@@ -225,8 +232,6 @@ TokenizedProgram tokenize(char* str, int length) {
           break;
         }
         /*Push token onto program struct.*/
-        int li = program.len;
-        int num_tokens = program.lines[li].len;
         program.lines[li].tokens[num_tokens] = t;
         program.lines[li].len = num_tokens + 1;
 
