@@ -32,7 +32,7 @@ int entry(int argc, char** argv) {
   fclose(input_stream);
   program[fsize] = EOF;
 
-  TokenizedProgram program_tokens = tokenize(program, fsize);
+  TokenizedProgram program_tokens = tokenize(program, (int)fsize);
 
 #ifdef LOG_VERBOSE
   log_tokenized_program(program_tokens);
@@ -71,8 +71,8 @@ TokenizedProgram tokenize(char* str, int length) {
   int program_size = 2;
   TokenizedProgram program;
   program.len = 0;
-  program.lines = (Line*)malloc(program_size * sizeof(Line));
-  memset(program.lines, 0, program_size * sizeof(Line));
+  program.lines = (Line*)malloc((size_t)program_size * sizeof(Line));
+  memset(program.lines, 0, (size_t)program_size * sizeof(Line));
   Token t;
   t.len = 0;
 
@@ -81,18 +81,18 @@ TokenizedProgram tokenize(char* str, int length) {
     char c = str[i];
     int li = program.len;
     int num_tokens = program.lines[li].len;
+    bool is_token_empty = t.len == 0;
     switch (c) {
       case EOF:
       case '\n':
         program.len++;
         if (program.len == program_size) {
           program_size = program_size * 2;
-          program.lines = realloc(program.lines, program_size * sizeof(Line));
+          program.lines = realloc(program.lines, (size_t)program_size * sizeof(Line));
         }
       case ' ':
       case ',':
       case ':':
-        bool is_token_empty = t.len == 0;
         if (is_token_empty) {
           break;
         }
@@ -136,7 +136,8 @@ State tick(State s, Line line) {
     s.cont = false;
     return s;
   }
-  CMD cmd = identify_cmd(line.tokens[0]);
+  Token t = line.tokens[0];
+  CMD cmd = identify_cmd(t);
   switch (cmd) {
     case ADD:
       s = add_or_sub(s, line, true);
@@ -183,7 +184,7 @@ State tick(State s, Line line) {
       printf("pc: %i\n", s.pc);
       break;
     case UNKNOWN:
-      Token t = line.tokens[0];
+      
       printf("Error could not parse statement identifier: %c%c%c\n", t.tok[0],
              t.tok[1], t.tok[2]);
       break;
