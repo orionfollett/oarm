@@ -8,7 +8,6 @@
 #define true 1
 #define false 0
 
-
 typedef void* (*AllocFn)(unsigned long);
 typedef void (*FreeFn)(void*);
 
@@ -17,7 +16,10 @@ typedef struct s8 {
   int len;
 } s8;
 
-typedef struct ResultInt {bool found; int val;} ResultInt;
+typedef struct ResultInt {
+  bool found;
+  int val;
+} ResultInt;
 
 typedef struct MapNode {
   int hash;
@@ -33,9 +35,12 @@ typedef struct Map {
 } Map;
 
 int s8_hash(s8 key);
+s8 s8_from(AllocFn alloc, const char* s);
+
 Map map_init(AllocFn alloc, unsigned long size);
 Map map_set(AllocFn alloc, Map m, s8 key, int val);
-int map_get(Map m, s8 key);
+ResultInt map_get(Map m, s8 key);
 void map_destroy(FreeFn free, Map map);
 
+MapNode* map_node_init(AllocFn alloc, s8 key, int val, int hash, MapNode* next);
 #endif

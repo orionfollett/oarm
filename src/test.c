@@ -80,7 +80,26 @@ void test_resolve_labels(void) {
 void test_ostd_map(void) {
   printf("\ntest_ostd_map\n");
   Map m = map_init(malloc, 1);
-  assert(m.size = 2);
+  if (!assert(m.size = 2)) {
+    printf("expected map size 2 got %i", m.size);
+  }
+
+  m = map_set(malloc, m, s8_from(malloc, "hello"), 1);
+  m = map_set(malloc, m, s8_from(malloc, "goodbye"), 2);
+  m = map_set(malloc, m, s8_from(malloc, "orion"), 3);
+
+  ResultInt r1 = map_get(m, s8_from(malloc, "hello"));
+  if (!assert(r1.found)) {
+    printf("expected to find str hello in map");
+  }
+  if (!assert(r1.val == 1)) {
+    printf("expected to val for hello to be 1 got %i", r1.val);
+  }
+
+  ResultInt r2 = map_get(m, s8_from(malloc, "notfound"));
+  if (!assert(r2.found)) {
+    printf("Expected not to find string notfound");
+  }
 }
 
 bool assert(bool cond) {
