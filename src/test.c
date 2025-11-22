@@ -44,11 +44,11 @@ void test_tokenize(void) {
   printf("\ntest_tokenize\n");
 
   TokenizedProgram p =
-      tokenize(" mov  x0, #1 \n rpc \n add  x1 , x0, #2\nreg", 41);
+      tokenize(" mov  x0, #1 \n rpc\n add  x1 , x0, #2\nreg\n", 41);
   /*log_tokenized_program(p);*/
 
-  if (!assert(3 == p.len)) {
-    printf("expected program len of 3 got %i", p.len);
+  if (!assert(4 == p.len)) {
+    printf("expected program len of 4 got %i", p.len);
   }
   Line line1 = p.lines[0];
   if (!assert(3 == line1.len)) {

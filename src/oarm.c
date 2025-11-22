@@ -81,15 +81,13 @@ TokenizedProgram tokenize(char* str, int length) {
     char c = str[i];
     int li = program.len;
     int num_tokens = program.lines[li].len;
-    putchar(c);
     switch (c) {
+      case EOF:
       case '\n':
-        if (t.len > 0) {
-          program.len++;
-          if (program.len == program_size) {
-            program_size = program_size * 2;
-            program.lines = realloc(program.lines, program_size * sizeof(Line));
-          }
+        program.len++;
+        if (program.len == program_size) {
+          program_size = program_size * 2;
+          program.lines = realloc(program.lines, program_size * sizeof(Line));
         }
       case ' ':
       case ',':
