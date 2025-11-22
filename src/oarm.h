@@ -123,6 +123,7 @@ void log_mem(State s);
 int get_register_or_constant(State s, Arg a);
 void print_help(void);
 void log_tokenized_program(TokenizedProgram p);
+void log_line(Line line);
 int entry(int argc, char** argv);
 
 #endif

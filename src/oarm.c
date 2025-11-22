@@ -32,22 +32,29 @@ int entry(int argc, char** argv) {
   program[fsize] = EOF;
 
   TokenizedProgram program_tokens = tokenize(program, fsize);
+
+#ifdef LOG_VERBOSE
   log_tokenized_program(program_tokens);
+#endif
 
   State s;
-  memset(s.memory, 0, sizeof(int)*MEM_BYTES);
-  memset(s.registers, 0, sizeof(int)*NUM_REGISTERS);
-  s.pc=0;
-  s.cont=true;
-  s.cmp=0;
+  memset(s.memory, 0, sizeof(int) * MEM_BYTES);
+  memset(s.registers, 0, sizeof(int) * NUM_REGISTERS);
+  s.pc = 0;
+  s.cont = true;
+  s.cmp = 0;
   while (s.cont) {
     s = tick(s, program_tokens.lines[s.pc]);
+    if (s.pc > program_tokens.len) {
+      s.cont = false;
+    }
   }
 
   free(program_tokens.lines);
   free(program);
   return 0;
 }
+
 void print_help(void) {
   printf(
       "Usage: oarm [FILE]\n"
@@ -121,9 +128,13 @@ TokenizedProgram tokenize(char* str, int length) {
 }
 
 State tick(State s, Line line) {
-  /*Evaluate one line of asm.*/
+/*Evaluate one line of asm.*/
+#ifdef LOG_VERBOSE
+  log_line(line);
+#endif
   if (line.len < 1) {
     printf("warning:tick: empty line\n");
+    s.cont = false;
     return s;
   }
   CMD cmd = identify_cmd(line.tokens[0]);
@@ -178,7 +189,7 @@ State tick(State s, Line line) {
              t.tok[1], t.tok[2]);
       break;
     case LABEL:
-        printf("label not handled\n");
+      printf("label not handled\n");
   }
   s.pc++;
   return s;
@@ -246,8 +257,7 @@ CMD identify_cmd(Token t) {
 }
 
 int parse_int(const char* num, int len) {
-  /*Given an array of chars, return an int. Char array must be null
-   * terminated.*/
+  /*Given an array of chars, return an int.*/
   if (len > 8) {
     printf(
         "Integer overflow detected in parse int. Max int is 8 digits. "
@@ -275,103 +285,79 @@ Args parse_args(Line line) {
   Args args;
   args.count = 0;
   args.is_valid = true;
-/*
-  int i = 0;
-  int arg_start = 0;
-  for (; i < ARGS_LEN; i++) {
-    bool is_line_end = line[i] == EOF || line[i] == '\n';
-    bool is_arg_end = line[i] == ',' || is_line_end;
-    if (is_arg_end) {
-      Arg a;
+  int i = 1;
+  for (; i < line.len; i++) {
+    Token t = line.tokens[i];
+    Arg a;
 
-      /* ADDRESS argument*/
-
-      /*
-      if (line[arg_start] == '[') {
-        a.tag = ADDRESS;
-        if (line[arg_start + 1] == 'x') {
-          a.addr.type = A_REGISTER;
-        } else if (line[arg_start + 1] == '#') {
-          a.addr.type = A_CONSTANT;
-        } else {
-          printf(
-              "Argument %i, unsupported address type, must be register or "
-              "constant.",
-              args.count + 1);
-          args.is_valid = false;
-          return args;
-        }
-        int start = arg_start + 2;
-        int len = i - arg_start - 3;
-        if (len < 1) {
-          printf(
-              "Argument %i [col %i:%i], expected numerical value for memory "
-              "address argument, got empty string.\n",
-              args.count + 1, start, len);
-          args.is_valid = false;
-          return args;
-        }
-        a.addr.val = parse_int(line + start, len);
-
-        if (a.addr.type == A_CONSTANT) {
-          if (a.addr.val > MEM_BYTES || a.addr.val < 0) {
-            printf(
-                "Argument %i memory address is out of range, must be between 0 "
-                "and %i\n",
-                args.count + 1, MEM_BYTES);
-            args.is_valid = false;
-            return args;
-          }
-        }
-*/
-        /*Register argument*/
-        /*
-      } else if (line[arg_start] == 'x') {
-        a.tag = REGISTER;
-        int start = arg_start + 1;
-        int len = i - arg_start - 1;
-        a.reg = parse_int(line + start, len);
-        if (a.reg > NUM_REGISTERS || a.reg < 0) {
-          printf(
-              "Argument %i register is out of range, must be between 0 and "
-              "%i\n",
-              args.count + 1, NUM_REGISTERS);
-          args.is_valid = false;
-          return args;
-        }
-
-        /*constant argument*/
-        /*
-      } else if (line[arg_start] == '#') {
-        a.tag = CONSTANT;
-        int start = arg_start + 1;
-        int len = i - arg_start - 1;
-        a.constant = parse_int(line + start, len);
+    /*Address argument */
+    if (t.tok[0] == '[') {
+      a.tag = ADDRESS;
+      if (t.tok[1] == 'x') {
+        a.addr.type = A_REGISTER;
+      } else if (t.tok[1] == '#') {
+        a.addr.type = A_CONSTANT;
       } else {
-        args.is_valid = false;
         printf(
-            "Error parsing args, couldn't recognize arg type. last char "
-            "parsed: %i (%c) (col: %i)\n",
-            line[i], line[i], i);
+            "Argument %i, unsupported address type, must be register or "
+            "constant.",
+            args.count + 1);
+        args.is_valid = false;
         return args;
       }
 
-      args.args[args.count] = a;
-      args.count++;
-      arg_start = i + 1;
-      continue;
+      const char* num_start = (const char*)t.tok + 2;
+      int num_len = t.len - 3;
+      if (num_len < 1) {
+        printf(
+            "Argument %i, expected numerical value for memory "
+            "address argument, got empty string.\n",
+            args.count + 1);
+        args.is_valid = false;
+        return args;
+      }
+      a.addr.val = parse_int((const char*)num_start, num_len);
+
+      if (a.addr.type == A_CONSTANT) {
+        if (a.addr.val > MEM_BYTES || a.addr.val < 0) {
+          printf(
+              "Argument %i memory address is out of range, must be between 0 "
+              "and %i\n",
+              args.count + 1, MEM_BYTES);
+          args.is_valid = false;
+          return args;
+        }
+      }
     }
-    if (is_line_end) {
+    /*Register argument*/
+    else if (t.tok[0] == 'x') {
+      a.tag = REGISTER;
+      a.reg = parse_int(t.tok + 1, t.len - 1);
+      if (a.reg > NUM_REGISTERS || a.reg < 0) {
+        printf(
+            "Argument %i register is out of range, must be between 0 and "
+            "%i\n",
+            args.count + 1, NUM_REGISTERS);
+        args.is_valid = false;
+        return args;
+      }
+
+      /*constant argument*/
+    } else if (t.tok[0] == '#') {
+      a.tag = CONSTANT;
+      a.constant = parse_int(t.tok + 1, t.len - 1);
+    } else {
+      args.is_valid = false;
+      printf(
+          "Error parsing args, couldn't recognize arg type. tok %i last 3 "
+          "chars: %c%c%c\n",
+          i, t.tok[0], t.tok[1], t.tok[2]);
       return args;
     }
-    if (args.count == 3) {
-      return args;
-    }
-    if (line[i] == ' ' || line[i] == ',') {
-      arg_start = i + 1;
-    }
+    args.args[args.count] = a;
+    args.count++;
   }
-*/
+
   return args;
 }
 
@@ -574,9 +560,6 @@ State lsl_or_lsr(State s, Line line, bool is_left) {
 }
 
 State branch(State s, Line line, CMD command) {
-  if (command == BNE) {
-    printf("%s", line);
-  }
   return s;
 }
 
@@ -644,6 +627,20 @@ int get_register_or_constant(State s, Arg a) {
     val = a.constant;
   }
   return val;
+}
+
+void log_line(Line line) {
+  int i = 0;
+  printf("> ");
+  for (; i < line.len; i++) {
+    Token t = line.tokens[i];
+    int j = 0;
+    for (; j < t.len; j++) {
+      putchar(t.tok[j]);
+    }
+    putchar(' ');
+  }
+  putchar('\n');
 }
 
 void log_tokenized_program(TokenizedProgram p) {
