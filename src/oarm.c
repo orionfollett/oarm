@@ -46,7 +46,7 @@ int entry(int argc, char** argv) {
   s.cmp = 0;
   while (s.cont) {
     s = tick(s, program_tokens.lines[s.pc]);
-    if (s.pc > program_tokens.len) {
+    if (s.pc > program_tokens.len || s.pc < 0) {
       s.cont = false;
     }
   }
