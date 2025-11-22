@@ -5,10 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define bool int
-#define true 1
-#define false 0
+#include "ostd.h"
 
 #define MAX_LINE_LEN 128
 #define MAX_IDENT_LEN 32

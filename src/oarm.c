@@ -1,4 +1,5 @@
 #include "oarm.h"
+#include "ostd.h"
 
 #define LOG_VERBOSE
 int entry(int argc, char** argv) {

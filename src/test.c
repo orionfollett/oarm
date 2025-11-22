@@ -1,4 +1,5 @@
 #include "oarm.h"
+#include "ostd.h"
 
 bool assert(bool cond);
 void test_parse_int(void);
@@ -11,6 +12,7 @@ int main(void) {
   test_parse_int();
   test_tokenize();
   test_resolve_labels();
+  test_ostd_map();
   printf("\nend tests.\n");
 }
 
@@ -77,6 +79,8 @@ void test_resolve_labels(void) {
 
 void test_ostd_map(void) {
   printf("\ntest_ostd_map\n");
+  Map m = map_init(malloc, 1);
+  assert(m.size = 2);
 }
 
 bool assert(bool cond) {
