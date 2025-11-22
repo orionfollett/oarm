@@ -57,6 +57,7 @@ int entry(int argc, char** argv) {
 }
 
 void print_help(void) {
+  /*Write a little tutorial of the commands available*/
   printf(
       "Usage: oarm [FILE]\n"
       "\n"
@@ -139,9 +140,7 @@ TokenizedProgram tokenize(char* str, int length) {
 
 State tick(State s, Line line) {
 /*Evaluate one line of asm.*/
-#ifdef LOG_VERBOSE
   log_line(line);
-#endif
   if (line.len < 1) {
     printf("warning:tick: empty line\n");
     s.cont = false;
@@ -279,7 +278,14 @@ int parse_int(const char* num, int len) {
   int result = 0;
   int place = 1;
   int i = len - 1;
-  for (; i >= 0; i--) {
+  int sign = 1;
+  int end = 0;
+  if(num[0]=='-'){
+      sign = -1;
+      end = 1;
+  }
+
+  for (; i >= end; i--) {
     if (num[i] < (int)'0' || num[i] > (int)'9') {
       printf("Non digit detected in parse int string: %x (%i)\n", num[i],
              num[i]);
@@ -289,7 +295,7 @@ int parse_int(const char* num, int len) {
     place = place * 10;
   }
 
-  return result;
+  return result*sign;
 }
 
 Args parse_args(Line line) {

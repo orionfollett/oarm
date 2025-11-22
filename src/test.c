@@ -33,6 +33,16 @@ void test_parse_int(void) {
   if (!assert(1234 == n)) {
     printf("test_part_int: expected 1234 got %i", n);
   }
+
+  n = parse_int("-3", 2);
+  if (!assert(-3 == n)) {
+    printf("test_part_int: expected -3 got %i", n);
+  }
+
+  n = parse_int("-765", 4);
+  if (!assert(-765 == n)) {
+    printf("test_part_int: expected -765 got %i", n);
+  }
 }
 
 void test_tokenize(void) {
