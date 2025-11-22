@@ -69,7 +69,9 @@ void test_tokenize(void) {
 
 void test_resolve_labels(void){
   printf("\ntest_resolve_labels\n");
-
+  TokenizedProgram p =
+      tokenize("loop:\nmov x0, #0\nadd x0, x0, #1\nb loop\nexit:", 45);
+  resolve_labels(p);
 }
 
 bool assert(bool cond) {

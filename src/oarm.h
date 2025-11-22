@@ -57,7 +57,7 @@ typedef enum {
   STR,
   SUB,
   NL,
-  LABEL,
+  LABEL_DECL,
   BRANCH,
   BLE,
   BGE,

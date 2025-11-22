@@ -94,6 +94,7 @@ TokenizedProgram tokenize(char* str, int length) {
       break;
     }
     switch (c) {
+      case '\0':
       case EOF:
       case '\n':
         program.len++;
@@ -149,8 +150,9 @@ TokenizedProgram resolve_labels(TokenizedProgram p){
   Label declarations must be unique.
 
   Second pass:
-  Identify all label uses (two token line where second line is a label)
+  Identify all label uses (two token line where first instruction is a branch instruction)
   Replace them with the ascii representation of their line index (a little inefficient to do this and then reparse but whatever)
+  Make sure all label uses have a declaration somewhere else in the program.
   */
   int ln = 0;
   for(; ln < p.len; ln++){
@@ -158,7 +160,7 @@ TokenizedProgram resolve_labels(TokenizedProgram p){
     if(line.len == 1){
       Token t = line.tokens[0];
       if(t.len > 0 && ':' == t.tok[t.len-1]){
-        printf("label found at line %i", ln);
+        printf("label declaration found at line %i", ln);
       }
     }
   }
@@ -225,7 +227,8 @@ State tick(State s, Line line) {
       printf("Error could not parse statement identifier: %c%c%c\n", t.tok[0],
              t.tok[1], t.tok[2]);
       break;
-    case LABEL:
+    case LABEL_DECL:
+      /*Label declarations dont do anything. They can be jumped too.*/
       break;
   }
   s.pc++;
@@ -234,7 +237,7 @@ State tick(State s, Line line) {
 
 CMD identify_cmd(Token t) {
   if (t.tok[t.len - 1] == ':') {
-    return LABEL;
+    return LABEL_DECL;
   }
   int key = (t.tok[0] << 16) | (t.tok[1] << 8) | t.tok[2];
   switch (key) {
@@ -338,10 +341,6 @@ Args parse_args(Line line) {
     if (t.tok[t.len - 1] == ':') {
       a.tag = LABEL_ARG;
       a.label = parse_int((const char*)t.tok, t.len - 1);
-      /*TODO replace this with looking up the label in the label jump table?
-      or change label to just be a char array and return the label name and the
-      caller can handle looking it up
-      */
     }
     /*Address argument */
     else if (t.tok[0] == '[') {
