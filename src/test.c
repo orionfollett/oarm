@@ -4,6 +4,7 @@ bool assert(bool cond);
 void test_parse_int(void);
 void test_tokenize(void);
 void test_resolve_labels(void);
+void test_ostd_map(void);
 
 int main(void) {
   printf("oarm test run\n");
@@ -67,11 +68,15 @@ void test_tokenize(void) {
   }
 }
 
-void test_resolve_labels(void){
+void test_resolve_labels(void) {
   printf("\ntest_resolve_labels\n");
   TokenizedProgram p =
       tokenize("loop:\nmov x0, #0\nadd x0, x0, #1\nb loop\nexit:", 45);
   resolve_labels(p);
+}
+
+void test_ostd_map(void) {
+  printf("\ntest_ostd_map\n");
 }
 
 bool assert(bool cond) {

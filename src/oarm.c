@@ -39,7 +39,6 @@ int entry(int argc, char** argv) {
 #endif
 
   /*Label pass, replace all labels with instruction offsets.*/
-  
 
   State s;
   memset(s.memory, 0, sizeof(int) * MEM_BYTES);
@@ -142,24 +141,25 @@ TokenizedProgram tokenize(char* str, int length) {
   return program;
 }
 
-TokenizedProgram resolve_labels(TokenizedProgram p){
+TokenizedProgram resolve_labels(TokenizedProgram p) {
   /*
   First pass:
   Identify all label declarations (single token line with a label).
-  Build hash map of label name to program counter position (line index in program)
-  Label declarations must be unique.
+  Build hash map of label name to program counter position (line index in
+  program) Label declarations must be unique.
 
   Second pass:
-  Identify all label uses (two token line where first instruction is a branch instruction)
-  Replace them with the ascii representation of their line index (a little inefficient to do this and then reparse but whatever)
-  Make sure all label uses have a declaration somewhere else in the program.
+  Identify all label uses (two token line where first instruction is a branch
+  instruction) Replace them with the ascii representation of their line index (a
+  little inefficient to do this and then reparse but whatever) Make sure all
+  label uses have a declaration somewhere else in the program.
   */
   int ln = 0;
-  for(; ln < p.len; ln++){
+  for (; ln < p.len; ln++) {
     Line line = p.lines[ln];
-    if(line.len == 1){
+    if (line.len == 1) {
       Token t = line.tokens[0];
-      if(t.len > 0 && ':' == t.tok[t.len-1]){
+      if (t.len > 0 && ':' == t.tok[t.len - 1]) {
         printf("label declaration found at line %i", ln);
       }
     }
@@ -168,7 +168,7 @@ TokenizedProgram resolve_labels(TokenizedProgram p){
 }
 
 State tick(State s, Line line) {
-/*Evaluate one line of asm.*/
+  /*Evaluate one line of asm.*/
   log_line(line);
   if (line.len < 1) {
     printf("warning:tick: empty line\n");
@@ -310,9 +310,9 @@ int parse_int(const char* num, int len) {
   int i = len - 1;
   int sign = 1;
   int end = 0;
-  if(num[0]=='-'){
-      sign = -1;
-      end = 1;
+  if (num[0] == '-') {
+    sign = -1;
+    end = 1;
   }
 
   for (; i >= end; i--) {
@@ -325,7 +325,7 @@ int parse_int(const char* num, int len) {
     place = place * 10;
   }
 
-  return result*sign;
+  return result * sign;
 }
 
 Args parse_args(Line line) {

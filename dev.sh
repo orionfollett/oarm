@@ -25,8 +25,9 @@ build(){
     rm -rf $BUILD_DIR/
     mkdir -p $BUILD_DIR
     $CC $CFLAGS -c $SRC_DIR/oarm.c -o $BUILD_DIR/oarm.o
-    $CC $CFLAGS $SRC_DIR/main.c $BUILD_DIR/oarm.o -o $BUILD_DIR/$APP
-    $CC $CFLAGS $SRC_DIR/test.c $BUILD_DIR/oarm.o -o $BUILD_DIR/$TEST
+    $CC $CFLAGS -c $SRC_DIR/ostd.c -o $BUILD_DIR/ostd.o
+    $CC $CFLAGS $SRC_DIR/main.c $BUILD_DIR/oarm.o $BUILD_DIR/ostd.o -o $BUILD_DIR/$APP
+    $CC $CFLAGS $SRC_DIR/test.c $BUILD_DIR/oarm.o $BUILD_DIR/ostd.o -o $BUILD_DIR/$TEST
 }
 
 run(){
