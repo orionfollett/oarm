@@ -1,4 +1,3 @@
-#define LOG_VERBOSE
 #include "oarm.h"
 
 int main(int argc, char** argv) {

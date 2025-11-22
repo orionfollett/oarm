@@ -1,5 +1,6 @@
 #include "oarm.h"
 
+#define LOG_VERBOSE
 int entry(int argc, char** argv) {
   printf("oarm v0.1\n____\n\n");
 
