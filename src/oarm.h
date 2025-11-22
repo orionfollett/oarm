@@ -117,6 +117,7 @@ CMD identify_cmd(Token t);
 Args parse_args(Line line);
 int parse_int(const char* num, int len);
 TokenizedProgram tokenize(char* str, int size);
+TokenizedProgram resolve_labels(TokenizedProgram p);
 
 State mov(State s, Line line);
 State ldr(State s, Line line);

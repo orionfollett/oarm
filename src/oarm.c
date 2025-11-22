@@ -38,6 +38,9 @@ int entry(int argc, char** argv) {
   log_tokenized_program(program_tokens);
 #endif
 
+  /*Label pass, replace all labels with instruction offsets.*/
+  
+
   State s;
   memset(s.memory, 0, sizeof(int) * MEM_BYTES);
   memset(s.registers, 0, sizeof(int) * NUM_REGISTERS);
@@ -136,6 +139,30 @@ TokenizedProgram tokenize(char* str, int length) {
     }
   }
   return program;
+}
+
+TokenizedProgram resolve_labels(TokenizedProgram p){
+  /*
+  First pass:
+  Identify all label declarations (single token line with a label).
+  Build hash map of label name to program counter position (line index in program)
+  Label declarations must be unique.
+
+  Second pass:
+  Identify all label uses (two token line where second line is a label)
+  Replace them with the ascii representation of their line index (a little inefficient to do this and then reparse but whatever)
+  */
+  int ln = 0;
+  for(; ln < p.len; ln++){
+    Line line = p.lines[ln];
+    if(line.len == 1){
+      Token t = line.tokens[0];
+      if(t.len > 0 && ':' == t.tok[t.len-1]){
+        printf("label found at line %i", ln);
+      }
+    }
+  }
+  return p;
 }
 
 State tick(State s, Line line) {

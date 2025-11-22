@@ -3,11 +3,13 @@
 bool assert(bool cond);
 void test_parse_int(void);
 void test_tokenize(void);
+void test_resolve_labels(void);
 
 int main(void) {
   printf("oarm test run\n");
   test_parse_int();
   test_tokenize();
+  test_resolve_labels();
   printf("\nend tests.\n");
 }
 
@@ -63,6 +65,11 @@ void test_tokenize(void) {
   if (!assert(1 == line2.len)) {
     printf("expected 1 tokens on line 2 got %i", line2.len);
   }
+}
+
+void test_resolve_labels(void){
+  printf("\ntest_resolve_labels\n");
+
 }
 
 bool assert(bool cond) {
