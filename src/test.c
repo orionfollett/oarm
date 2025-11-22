@@ -1,15 +1,10 @@
 #include "oarm.h"
 
-bool assert(bool cond) {
-  if (cond) {
-    printf(".");
-  }
-  return cond;
-}
+bool assert(bool cond);
 void test_parse_int(void);
 void test_tokenize(void);
 
-int main(int argc, char** argv) {
+int main(void) {
   printf("oarm test run\n");
   test_parse_int();
   test_tokenize();
@@ -58,4 +53,11 @@ void test_tokenize(void) {
   if (!assert(1 == line2.len)) {
     printf("expected 1 tokens on line 2 got %i", line2.len);
   }
+}
+
+bool assert(bool cond) {
+  if (cond) {
+    printf(".");
+  }
+  return cond;
 }

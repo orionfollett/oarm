@@ -69,6 +69,7 @@ typedef enum {
   UNKNOWN
 } CMD;
 typedef int Register;
+typedef int Label;
 
 typedef enum { A_CONSTANT, A_REGISTER } AddressType;
 typedef struct Address {
@@ -76,7 +77,13 @@ typedef struct Address {
   AddressType type;
 } Address;
 
-typedef enum { ADDRESS, CONSTANT, REGISTER, REGISTER_OR_CONSTANT } ArgType;
+typedef enum {
+  ADDRESS,
+  CONSTANT,
+  REGISTER,
+  REGISTER_OR_CONSTANT,
+  LABEL_ARG
+} ArgType;
 
 typedef struct Arg {
   ArgType tag;
@@ -84,6 +91,7 @@ typedef struct Arg {
     Register reg;
     Address addr;
     int constant;
+    Label label;
   };
 } Arg;
 

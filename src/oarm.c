@@ -82,13 +82,24 @@ TokenizedProgram tokenize(char* str, int length) {
     int li = program.len;
     int num_tokens = program.lines[li].len;
     bool is_token_empty = t.len == 0;
+    if (num_tokens >= MAX_TOKENS_PER_LINE) {
+      printf(
+          "parsing failed, max tokens exceeded on line %i more than %i tokens "
+          "detected\n",
+          i, MAX_TOKENS_PER_LINE);
+      break;
+    }
     switch (c) {
       case EOF:
       case '\n':
         program.len++;
         if (program.len == program_size) {
+          int old_program_size = program_size;
           program_size = program_size * 2;
-          program.lines = realloc(program.lines, (size_t)program_size * sizeof(Line));
+          program.lines =
+              realloc(program.lines, (size_t)program_size * sizeof(Line));
+          memset(program.lines + old_program_size, 0,
+                 (size_t)(program_size - old_program_size) * sizeof(Line));
         }
       case ' ':
       case ',':
@@ -184,12 +195,12 @@ State tick(State s, Line line) {
       printf("pc: %i\n", s.pc);
       break;
     case UNKNOWN:
-      
+
       printf("Error could not parse statement identifier: %c%c%c\n", t.tok[0],
              t.tok[1], t.tok[2]);
       break;
     case LABEL:
-      printf("label not handled\n");
+      break;
   }
   s.pc++;
   return s;
@@ -290,8 +301,17 @@ Args parse_args(Line line) {
     Token t = line.tokens[i];
     Arg a;
 
+    /*Label argument*/
+    if (t.tok[t.len - 1] == ':') {
+      a.tag = LABEL_ARG;
+      a.label = parse_int((const char*)t.tok, t.len - 1);
+      /*TODO replace this with looking up the label in the label jump table?
+      or change label to just be a char array and return the label name and the
+      caller can handle looking it up
+      */
+    }
     /*Address argument */
-    if (t.tok[0] == '[') {
+    else if (t.tok[0] == '[') {
       a.tag = ADDRESS;
       if (t.tok[1] == 'x') {
         a.addr.type = A_REGISTER;
@@ -560,6 +580,31 @@ State lsl_or_lsr(State s, Line line, bool is_left) {
 }
 
 State branch(State s, Line line, CMD command) {
+  Args args = parse_args(line);
+  if (!args.is_valid) {
+    s.cont = false;
+    return s;
+  }
+
+  ArgValidations v;
+  v.expected_arg_count = 1;
+  v.cmd_pretty_str = "branch";
+
+  ArgValidation v1;
+  v1.expected_arg_type = LABEL_ARG;
+  v.validations[0] = v1;
+  if (!validate_args(args, v)) {
+    s.cont = false;
+    return s;
+  }
+
+  switch (command) {
+    case BRANCH:
+      s.pc += (int)args.args[0].label;
+      break;
+    default:
+      break;
+  }
   return s;
 }
 
