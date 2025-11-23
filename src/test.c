@@ -9,6 +9,7 @@ void test_ostd_map(void);
 void test_e2e_add_sub(void);
 void test_e2e_ldr_str(void);
 void test_e2e_lsl_lsr(void);
+void test_b(void);
 
 int main(void) {
   printf("oarm test run\n");
@@ -18,6 +19,7 @@ int main(void) {
   test_e2e_add_sub();
   test_e2e_ldr_str();
   test_e2e_lsl_lsr();
+  test_b();
   printf("\nend tests.\n");
 }
 
@@ -165,6 +167,21 @@ void test_e2e_lsl_lsr(void) {
   }
   if (!assert(rs.state.registers[0] == 2)) {
     printf("expected lsl_lsr.s to have 2 in its first register, got %i\n",
+           rs.state.registers[0]);
+  }
+}
+void test_b(void) {
+  printf("\test_b\n");
+
+  char* argv[2];
+  argv[1] = "asm/e2e/b.s";
+  ResultState rs = entry(2, (char**)&argv);
+
+  if (!assert(rs.return_val == 0)) {
+    printf("expected b.s to return successful, got %i\n", rs.return_val);
+  }
+  if (!assert(rs.state.registers[0] == 1)) {
+    printf("expected b.s to have 1 in its first register, got %i\n",
            rs.state.registers[0]);
   }
 }
