@@ -624,9 +624,9 @@ State lsl_or_lsr(State s, Line line, bool is_left) {
   int val2 = get_register_or_constant(s, a3);
 
   if (is_left) {
-    s.registers[a1.reg] = val2 << val1;
+    s.registers[a1.reg] = val1 << val2;
   } else {
-    s.registers[a1.reg] = val2 >> val1;
+    s.registers[a1.reg] = val1 >> val2;
   }
   return s;
 }

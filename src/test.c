@@ -8,6 +8,7 @@ void test_resolve_labels(void);
 void test_ostd_map(void);
 void test_e2e_add_sub(void);
 void test_e2e_ldr_str(void);
+void test_e2e_lsl_lsr(void);
 
 int main(void) {
   printf("oarm test run\n");
@@ -16,6 +17,7 @@ int main(void) {
   test_ostd_map();
   test_e2e_add_sub();
   test_e2e_ldr_str();
+  test_e2e_lsl_lsr();
   printf("\nend tests.\n");
 }
 
@@ -147,6 +149,22 @@ void test_e2e_ldr_str(void) {
   }
   if (!assert(rs.state.registers[0] == 99)) {
     printf("expected ldr_str.s to have 99 in its first register, got %i\n",
+           rs.state.registers[0]);
+  }
+}
+
+void test_e2e_lsl_lsr(void) {
+  printf("\test_e2e_lsl_lsr\n");
+
+  char* argv[2];
+  argv[1] = "asm/e2e/lsl_lsr.s";
+  ResultState rs = entry(2, (char**)&argv);
+
+  if (!assert(rs.return_val == 0)) {
+    printf("expected lsl_lsr.s to return successful, got %i\n", rs.return_val);
+  }
+  if (!assert(rs.state.registers[0] == 2)) {
+    printf("expected lsl_lsr.s to have 2 in its first register, got %i\n",
            rs.state.registers[0]);
   }
 }
