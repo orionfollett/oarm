@@ -25,6 +25,8 @@ typedef struct State {
   /*program counter, just references the line no in asm file*/
   int pc;
   bool cont;
+
+  Map labels;
 } State;
 
 typedef struct Line {
@@ -61,7 +63,6 @@ typedef enum {
   UNKNOWN
 } CMD;
 typedef int Register;
-typedef int Label;
 
 typedef enum { A_CONSTANT, A_REGISTER } AddressType;
 typedef struct Address {
@@ -83,7 +84,7 @@ typedef struct Arg {
     Register reg;
     Address addr;
     int constant;
-    Label label;
+    s8 label;
   };
 } Arg;
 
@@ -109,7 +110,7 @@ CMD identify_cmd(s8 t);
 Args parse_args(Line line);
 ResultInt parse_int(s8 s);
 TokenizedProgram tokenize(s8 s);
-TokenizedProgram resolve_labels(TokenizedProgram p);
+Map resolve_labels(TokenizedProgram p);
 
 State mov(State s, Line line);
 State ldr(State s, Line line);

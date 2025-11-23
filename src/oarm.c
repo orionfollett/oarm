@@ -41,14 +41,13 @@ int entry(int argc, char** argv) {
   log_tokenized_program(program_tokens);
 #endif
 
-  /*Label pass, replace all labels with instruction offsets.*/
-
   State s;
   memset(s.memory, 0, sizeof(int) * MEM_BYTES);
   memset(s.registers, 0, sizeof(int) * NUM_REGISTERS);
   s.pc = 0;
   s.cont = true;
   s.cmp = 0;
+  s.labels = resolve_labels(program_tokens);
   while (s.cont) {
     s = tick(s, program_tokens.lines[s.pc]);
     if (s.pc > program_tokens.len || s.pc < 0) {
@@ -148,48 +147,21 @@ TokenizedProgram tokenize(s8 s) {
   return program;
 }
 
-TokenizedProgram resolve_labels(TokenizedProgram p) {
-  /*First pass, find all label declarations and store line number.*/
-  Map label_decs = map_init(malloc, 10);
+Map resolve_labels(TokenizedProgram p) {
+  /*Find all label declarations and store line number.*/
+  Map labels = map_init(malloc, 10);
   int ln = 0;
   for (; ln < p.len; ln++) {
     Line line = p.lines[ln];
     if (line.len == 1) {
       s8 t = line.tokens[0];
       if (t.len > 0 && ':' == t.str[t.len - 1]) {
-        label_decs = map_set(malloc, label_decs, t, ln);
+        labels = map_set(malloc, labels, t, ln);
       }
     }
   }
 
-  /*Second pass, find label usages, replace with ASCII line number.*/
-  ln = 0;
-  for (; ln < p.len; ln++) {
-    Line line = p.lines[ln];
-    if (line.len == 2) {
-      CMD c = identify_cmd(line.tokens[0]);
-      switch (c) {
-        case BRANCH:
-        case BNE:
-        case BEQ:
-        case BLT:
-        case BLE:
-        case BGT:
-        case BGE:
-          /*if first token is branch instruction then second token is a label.*/
-          s8 label = line.tokens[1];
-          ResultInt r = map_get(label_decs, label);
-          if (!r.ok) {
-            printf("Undeclared label, %s", s8_to_c(malloc, label));
-          }
-
-        default:
-          continue;
-      }
-    }
-  }
-
-  return p;
+  return labels;
 }
 
 State tick(State s, Line line) {
@@ -373,12 +345,7 @@ Args parse_args(Line line) {
     if (t.str[t.len - 1] == ':') {
       a.tag = LABEL_ARG;
       t.len = t.len - 1;
-      ResultInt r = parse_int(t);
-      if (!r.ok) {
-        args.is_valid = false;
-        return args;
-      }
-      a.label = r.val;
+      a.label = t;
     }
     /*Address argument */
     else if (t.str[0] == '[') {
@@ -687,11 +654,50 @@ State branch(State s, Line line, CMD command) {
     return s;
   }
 
+  s8 label = args.args[0].label;
+  ResultInt jmp = map_get(s.labels, label);
+  if (!jmp.ok) {
+    s.cont = false;
+    printf("label declaration not found for label: %s", s8_to_c(malloc, label));
+    return s;
+  }
+
   switch (command) {
     case BRANCH:
-      s.pc += (int)args.args[0].label;
+      s.pc = jmp.val;
+      break;
+    case BLE:
+      if (s.cmp <= 0) {
+        s.pc = jmp.val;
+      }
+      break;
+    case BLT:
+      if (s.cmp < 0) {
+        s.pc = jmp.val;
+      }
+      break;
+    case BGE:
+      if (s.cmp >= 0) {
+        s.pc = jmp.val;
+      }
+      break;
+    case BGT:
+      if (s.cmp > 0) {
+        s.pc = jmp.val;
+      }
+      break;
+    case BNE:
+      if (s.cmp != 0) {
+        s.pc = jmp.val;
+      }
+      break;
+    case BEQ:
+      if (s.cmp == 0) {
+        s.pc = jmp.val;
+      }
       break;
     default:
+      printf("this should never happen");
       break;
   }
   return s;
