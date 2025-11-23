@@ -112,6 +112,10 @@ void test_ostd_map(void) {
   if (!assert(r3.val == -1)) {
     printf("expected val for orion to be -1 got %i", r3.val);
   }
+
+  if(!assert(m.count == 7)){
+    printf("expected m count to be 7 got %i", m.count);
+  }
 }
 
 bool assert(bool cond) {

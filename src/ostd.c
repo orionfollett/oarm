@@ -85,6 +85,7 @@ Map map_set(AllocFn alloc, Map m, s8 key, int val) {
   if (curr == 0) {
     MapNode* n = map_node_init(alloc, key, val, hash, 0);
     m.buckets[index] = n;
+    m.count++;
     return m;
   }
 
@@ -94,6 +95,7 @@ Map map_set(AllocFn alloc, Map m, s8 key, int val) {
       break;
     }
     if (curr->next == 0) {
+      m.count++;
       MapNode* n = map_node_init(alloc, key, val, hash, 0);
       curr->next = n;
       break;
