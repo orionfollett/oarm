@@ -149,28 +149,46 @@ TokenizedProgram tokenize(s8 s) {
 }
 
 TokenizedProgram resolve_labels(TokenizedProgram p) {
-  /*
-  First pass:
-  Identify all label declarations (single token line with a label).
-  Build hash map of label name to program counter position (line index in
-  program) Label declarations must be unique.
-
-  Second pass:
-  Identify all label uses (two token line where first instruction is a branch
-  instruction) Replace them with the ascii representation of their line index (a
-  little inefficient to do this and then reparse but whatever) Make sure all
-  label uses have a declaration somewhere else in the program.
-  */
+  /*First pass, find all label declarations and store line number.*/
+  Map label_decs = map_init(malloc, 10);
   int ln = 0;
   for (; ln < p.len; ln++) {
     Line line = p.lines[ln];
     if (line.len == 1) {
       s8 t = line.tokens[0];
       if (t.len > 0 && ':' == t.str[t.len - 1]) {
-        printf("label declaration found at line %i", ln);
+        label_decs = map_set(malloc, label_decs, t, ln);
       }
     }
   }
+
+  /*Second pass, find label usages, replace with ASCII line number.*/
+  ln = 0;
+  for (; ln < p.len; ln++) {
+    Line line = p.lines[ln];
+    if (line.len == 2) {
+      CMD c = identify_cmd(line.tokens[0]);
+      switch (c) {
+        case BRANCH:
+        case BNE:
+        case BEQ:
+        case BLT:
+        case BLE:
+        case BGT:
+        case BGE:
+          /*if first token is branch instruction then second token is a label.*/
+          s8 label = line.tokens[1];
+          ResultInt r = map_get(label_decs, label);
+          if (!r.ok) {
+            printf("Undeclared label, ");
+          }
+          break;
+        default:
+          continue;
+      }
+    }
+  }
+
   return p;
 }
 

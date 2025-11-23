@@ -40,6 +40,13 @@ s8 s8_from(AllocFn alloc, const char* s) {
   return r;
 }
 
+const char* s8_to_c(AllocFn alloc, s8 s) {
+  char* n = alloc((1 + s.len) * sizeof(char));
+  memcpy(n, s.str, s.len * sizeof(char));
+  n[s.len] = '\0';
+  return (const char*)n;
+}
+
 void s8_destroy(FreeFn free, s8 s) {
   free(s.str);
 }
