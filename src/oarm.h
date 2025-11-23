@@ -132,6 +132,7 @@ void log_registers(State s);
 void log_mem(State s);
 int get_register_or_constant(State s, Arg a);
 void print_help(void);
+void print_docs(void);
 void log_tokenized_program(TokenizedProgram p);
 void log_line(Line line);
 ResultState entry(int argc, char** argv);

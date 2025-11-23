@@ -12,8 +12,14 @@ ResultState entry(int argc, char** argv) {
     r.return_val = 0;
     return r;
   } else {
-    if (strcmp("--help", argv[1]) == 0) {
+    s8 arg1 = s8_from(malloc, argv[1]);
+    if (s8_eq(s8_from(malloc, "--help"), arg1)) {
       print_help();
+      r.return_val = 0;
+      return r;
+    }
+    else if(s8_eq(s8_from(malloc, "--docs"), arg1)){
+      print_docs();
       r.return_val = 0;
       return r;
     } else {
@@ -76,7 +82,12 @@ void print_help(void) {
       "  oarm program.s      Assemble and run program.s\n"
       "\n"
       "Options:\n"
-      "  --help              Show this help message and exit\n");
+      "  --help              Show this help message and exit\n"
+      "  --docs              Show documentation\n");
+}
+
+void print_docs(void){
+
 }
 
 TokenizedProgram tokenize(s8 s) {

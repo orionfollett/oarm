@@ -44,6 +44,7 @@ a database?
 
 
 TODO:
+- improve help menu
 - register labels
 - port over my assembly programs:
     - sort
