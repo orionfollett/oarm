@@ -61,6 +61,7 @@ typedef enum {
   BNE,
   RPC,
   CMP,
+  RCB,
   UNKNOWN
 } CMD;
 typedef int Register;

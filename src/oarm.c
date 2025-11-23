@@ -225,6 +225,9 @@ State tick(State s, Line line) {
       break;
     case CMP:
       s = cmp(s, line);
+    case RCB:
+      printf("cmp: %i", s.cmp);
+      break;
     case UNKNOWN:
       printf("Error could not parse statement identifier: %c%c%c\n", t.str[0],
              t.str[1], t.str[2]);
@@ -245,58 +248,42 @@ CMD identify_cmd(s8 t) {
   switch (key) {
     case ('m' << 16) | ('e' << 8) | 'm':
       return MEM;
-      break;
     case ('m' << 16) | ('o' << 8) | 'v':
       return MOV;
-      break;
     case ('a' << 16) | ('d' << 8) | 'd':
       return ADD;
-      break;
     case ('r' << 16) | ('e' << 8) | 'g':
       return REG;
-      break;
     case ('r' << 16) | ('e' << 8) | 't':
       return RET;
-      break;
     case ('l' << 16) | ('s' << 8) | 'l':
       return LSL;
-      break;
     case ('l' << 16) | ('s' << 8) | 'r':
       return LSR;
-      break;
     case ('s' << 16) | ('u' << 8) | 'b':
       return SUB;
-      break;
     case ('s' << 16) | ('t' << 8) | 'r':
       return STR;
-      break;
     case ('b' << 16) | ('e' << 8) | 'q':
       return BEQ;
-      break;
     case ('b' << 16) | ('n' << 8) | 'e':
       return BNE;
-      break;
     case ('b' << 16) | ('l' << 8) | 't':
       return BLT;
-      break;
     case ('b' << 16) | ('l' << 8) | 'e':
       return BLE;
-      break;
     case ('b' << 16) | ('g' << 8) | 't':
       return BGT;
-      break;
     case ('b' << 16) | ('g' << 8) | 'e':
       return BGE;
-      break;
     case ('b' << 16) | (0 << 8) | 0:
       return BRANCH;
-      break;
     case ('r' << 16) | ('p' << 8) | 'c':
       return RPC;
-      break;
     case ('c' << 16) | ('m' << 8) | 'p':
       return CMP;
-      break;
+    case ('r' << 16) | ('c' << 8) | 'b':
+      return RCB;
   }
   return UNKNOWN;
 }
