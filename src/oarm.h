@@ -27,13 +27,8 @@ typedef struct State {
   bool cont;
 } State;
 
-typedef struct Token {
-  char tok[MAX_IDENT_LEN];
-  int len;
-} Token;
-
 typedef struct Line {
-  Token tokens[MAX_TOKENS_PER_LINE];
+  s8 tokens[MAX_TOKENS_PER_LINE];
   int len;
 } Line;
 
@@ -112,7 +107,7 @@ State tick(State s, Line line);
 CMD identify_cmd(Token t);
 
 Args parse_args(Line line);
-int parse_int(const char* num, int len);
+ResultInt parse_int(s8 s);
 TokenizedProgram tokenize(s8 s);
 TokenizedProgram resolve_labels(TokenizedProgram p);
 

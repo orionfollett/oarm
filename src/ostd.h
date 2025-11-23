@@ -27,7 +27,7 @@ typedef struct s8 {
 } s8;
 
 typedef struct ResultInt {
-  bool found;
+  bool ok;
   int val;
 } ResultInt;
 
@@ -46,6 +46,7 @@ typedef struct Map {
 
 u64 s8_hash(s8 key);
 s8 s8_from(AllocFn alloc, const char* s);
+s8 s8_from_arr(AllocFn alloc, const char* s, int len);
 bool s8_eq(s8 s1, s8 s2);
 void s8_destroy(FreeFn free, s8 s);
 

@@ -25,15 +25,14 @@ int entry(int argc, char** argv) {
   /*fun fact, there is a race condition between getting size of file and
    * allocating memory. Whatever though, don't run the assembler while editing
    * the file.*/
+  s8 program;
   fseek(input_stream, 0, SEEK_END);
   i64 fsize = ftell(input_stream);
   fseek(input_stream, 0, SEEK_SET);
-  char* program_str = malloc((u64)(fsize + 1));
-  fread(program_str, (u64)fsize, 1, input_stream);
+  program.str = malloc((u64)(fsize + 1));
+  fread(program.str, (u64)fsize, 1, input_stream);
   fclose(input_stream);
-  program_str[fsize] = EOF;
-  s8 program;
-  program.str = program_str;
+  program.str[fsize] = EOF;
   program.len = (int)fsize;
 
   TokenizedProgram program_tokens = tokenize(program);
@@ -58,7 +57,6 @@ int entry(int argc, char** argv) {
   }
 
   free(program_tokens.lines);
-  free((void*)program_str);
   s8_destroy(free, program);
   return 0;
 }
@@ -301,36 +299,43 @@ CMD identify_cmd(Token t) {
   return UNKNOWN;
 }
 
-int parse_int(const char* num, int len) {
+ResultInt parse_int(s8 s) {
   /*Given an array of chars, return an int.*/
-  if (len > 8) {
+  ResultInt r;
+
+  if (s.len > 8) {
     printf(
         "Integer overflow detected in parse int. Max int is 8 digits. "
         "Truncating digits.\n");
-    len = 8;
+    r.ok = false;
+    r.val=0;
+    return r;
   }
 
   int result = 0;
   int place = 1;
-  int i = len - 1;
+  int i = s.len - 1;
   int sign = 1;
   int end = 0;
-  if (num[0] == '-') {
+  if (s.str[0] == '-') {
     sign = -1;
     end = 1;
   }
 
   for (; i >= end; i--) {
-    if (num[i] < (int)'0' || num[i] > (int)'9') {
-      printf("Non digit detected in parse int string: %x (%i)\n", num[i],
-             num[i]);
-      return 0;
+    if (s.str[i] < (int)'0' || s.str[i] > (int)'9') {
+      printf("Non digit detected in parse int string: %x (%i)\n", s.str[i],
+             s.str[i]);
+      r.ok = false;
+      r.val = 0;
+      return r;
     }
-    result += place * (num[i] - (int)'0');
+    result += place * (s.str[i] - (int)'0');
     place = place * 10;
   }
-
-  return result * sign;
+  r.ok = true;
+  r.val = result * sign;
+  return r;
 }
 
 Args parse_args(Line line) {
@@ -345,7 +350,14 @@ Args parse_args(Line line) {
     /*Label argument*/
     if (t.tok[t.len - 1] == ':') {
       a.tag = LABEL_ARG;
-      a.label = parse_int((const char*)t.tok, t.len - 1);
+      s8 num = s8_from_arr(malloc, t.tok, t.len);
+      num.len = t.len - 1;
+      ResultInt r = parse_int(num);
+      if(!r.ok){
+        args.is_valid = false;
+        return args;
+      }
+      a.label = r.val;
     }
     /*Address argument */
     else if (t.tok[0] == '[') {

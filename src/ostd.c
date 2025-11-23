@@ -30,12 +30,19 @@ bool s8_eq(s8 s1, s8 s2) {
 
 s8 s8_from(AllocFn alloc, const char* s) {
   s8 r;
-
   int i = 0;
   while (s[i] != '\0') {
     i++;
   }
   r.len = i;
+  r.str = alloc(sizeof(char) * (u64)r.len);
+  memcpy(r.str, s, sizeof(char) * (u64)r.len);
+  return r;
+}
+
+s8 s8_from_arr(AllocFn alloc, char* s, int len){
+  s8 r;
+  r.len = len;
   r.str = alloc(sizeof(char) * (u64)r.len);
   memcpy(r.str, s, sizeof(char) * (u64)r.len);
   return r;
@@ -114,12 +121,12 @@ ResultInt map_get(Map m, s8 key) {
   u64 hash = s8_hash(key);
   int index = (int)(hash & ((u64)m.size - 1));
   ResultInt r;
-  r.found = false;
+  r.ok = false;
   r.val = 0;
   MapNode* curr = m.buckets[index];
   while (curr != 0) {
     if (s8_eq(curr->key, key)) {
-      r.found = true;
+      r.ok = true;
       r.val = curr->val;
       return r;
     }

@@ -94,19 +94,19 @@ void test_ostd_map(void) {
   m = map_set(malloc, m, s8_from(malloc, "orion"), -1);
 
   ResultInt r1 = map_get(m, s8_from(malloc, "hello"));
-  if (!assert(r1.found)) {
+  if (!assert(r1.ok)) {
     printf("expected to find str hello in map");
   }
   if (!assert(r1.val == 1)) {
     printf("expected to val for hello to be 1 got %i", r1.val);
   }
 
-  ResultInt r2 = map_get(m, s8_from(malloc, "notfound"));
-  if (assert(r2.found)) {
-    printf("Expected not to find string notfound");
+  ResultInt r2 = map_get(m, s8_from(malloc, "notok"));
+  if (assert(r2.ok)) {
+    printf("Expected not to find string notok");
   }
   ResultInt r3 = map_get(m, s8_from(malloc, "orion"));
-  if (!assert(r3.found)) {
+  if (!assert(r3.ok)) {
     printf("expected to find str orion in map");
   }
   if (!assert(r3.val == -1)) {
