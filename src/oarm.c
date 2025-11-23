@@ -28,12 +28,15 @@ int entry(int argc, char** argv) {
   fseek(input_stream, 0, SEEK_END);
   i64 fsize = ftell(input_stream);
   fseek(input_stream, 0, SEEK_SET);
-  char* program = malloc((u64)(fsize + 1));
-  fread(program, (u64)fsize, 1, input_stream);
+  char* program_str = malloc((u64)(fsize + 1));
+  fread(program_str, (u64)fsize, 1, input_stream);
   fclose(input_stream);
-  program[fsize] = EOF;
+  program_str[fsize] = EOF;
+  s8 program;
+  program.str = program_str;
+  program.len = (int)fsize;
 
-  TokenizedProgram program_tokens = tokenize(program, (int)fsize);
+  TokenizedProgram program_tokens = tokenize(program);
 
 #ifdef LOG_VERBOSE
   log_tokenized_program(program_tokens);
@@ -55,7 +58,8 @@ int entry(int argc, char** argv) {
   }
 
   free(program_tokens.lines);
-  free(program);
+  free((void*)program_str);
+  s8_destroy(free, program);
   return 0;
 }
 
@@ -71,7 +75,7 @@ void print_help(void) {
       "  --help              Show this help message and exit\n");
 }
 
-TokenizedProgram tokenize(char* str, int length) {
+TokenizedProgram tokenize(s8 s) {
   int program_size = 2;
   TokenizedProgram program;
   program.len = 0;
@@ -81,8 +85,8 @@ TokenizedProgram tokenize(char* str, int length) {
   t.len = 0;
 
   int i = 0;
-  for (; i < length; i++) {
-    char c = str[i];
+  for (; i < s.len; i++) {
+    char c = s.str[i];
     int li = program.len;
     int num_tokens = program.lines[li].len;
     bool is_token_empty = t.len == 0;

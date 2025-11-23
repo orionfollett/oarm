@@ -53,8 +53,8 @@ void test_parse_int(void) {
 void test_tokenize(void) {
   printf("\ntest_tokenize\n");
 
-  TokenizedProgram p =
-      tokenize(" mov  x0, #1 \n rpc\n add  x1 , x0, #2\nreg\n", 41);
+  TokenizedProgram p = tokenize(
+      s8_from(malloc, " mov  x0, #1 \n rpc\n add  x1 , x0, #2\nreg\n"));
   /*log_tokenized_program(p);*/
 
   if (!assert(4 == p.len)) {
@@ -72,8 +72,8 @@ void test_tokenize(void) {
 
 void test_resolve_labels(void) {
   printf("\ntest_resolve_labels\n");
-  TokenizedProgram p =
-      tokenize("loop:\nmov x0, #0\nadd x0, x0, #1\nb loop\nexit:", 45);
+  TokenizedProgram p = tokenize(
+      s8_from(malloc, "loop:\nmov x0, #0\nadd x0, x0, #1\nb loop\nexit:"));
   resolve_labels(p);
 }
 
@@ -113,7 +113,7 @@ void test_ostd_map(void) {
     printf("expected val for orion to be -1 got %i", r3.val);
   }
 
-  if(!assert(m.count == 7)){
+  if (!assert(m.count == 7)) {
     printf("expected m count to be 7 got %i", m.count);
   }
 }

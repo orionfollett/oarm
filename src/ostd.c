@@ -41,6 +41,10 @@ s8 s8_from(AllocFn alloc, const char* s) {
   return r;
 }
 
+void s8_destroy(FreeFn free, s8 s) {
+  free(s.str);
+}
+
 Map map_init(AllocFn alloc, u64 size_log_2) {
   int size = 1;
   u64 i = 0;
