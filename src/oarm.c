@@ -180,9 +180,9 @@ TokenizedProgram resolve_labels(TokenizedProgram p) {
           s8 label = line.tokens[1];
           ResultInt r = map_get(label_decs, label);
           if (!r.ok) {
-            printf("Undeclared label, ");
+            printf("Undeclared label, %s", s8_to_c(malloc, label));
           }
-          break;
+
         default:
           continue;
       }
@@ -322,7 +322,7 @@ CMD identify_cmd(s8 t) {
 }
 
 ResultInt parse_int(s8 s) {
-  /*Given an array of chars, return an int.*/
+  /*Convert s8 char array to int.*/
   ResultInt r;
 
   if (s.len > 8) {
@@ -334,11 +334,11 @@ ResultInt parse_int(s8 s) {
     return r;
   }
 
-  int result = 0;
-  int place = 1;
-  int i = s.len - 1;
-  int sign = 1;
-  int end = 0;
+  i32 result = 0;
+  i32 place = 1;
+  i32 i = s.len - 1;
+  i32 sign = 1;
+  i32 end = 0;
   if (s.str[0] == '-') {
     sign = -1;
     end = 1;

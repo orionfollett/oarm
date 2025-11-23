@@ -46,7 +46,7 @@ typedef struct Map {
 
 u64 s8_hash(s8 key);
 s8 s8_from(AllocFn alloc, const char* s);
-const char* s8_to_c(AllocFn, alloc, s8 s);
+const char* s8_to_c(AllocFn alloc, s8 s);
 bool s8_eq(s8 s1, s8 s2);
 void s8_destroy(FreeFn free, s8 s);
 
