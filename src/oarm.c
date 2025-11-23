@@ -87,7 +87,31 @@ void print_help(void) {
 }
 
 void print_docs(void){
-
+  printf(
+    "oarm (Orion's subset of ARM assembly) documentation\n"
+    "\n"
+    "Registers + Memory:\n"
+    "  mov \n"
+    "  ldr \n"
+    "  str \n"
+    "\n"
+    "Arithmetic:\n"
+    "  add \n"
+    "  sub \n"
+    "  lsl \n"
+    "  lsr \n"
+    "\n"
+    "Branches:\n"
+    "  b\n"
+    "  beq\n"
+    "  bne\n"
+    "  blt\n"
+    "  ble\n"
+    "  bgt\n"
+    "  bge\n"
+    "\n"
+    ""
+  );
 }
 
 TokenizedProgram tokenize(s8 s) {
