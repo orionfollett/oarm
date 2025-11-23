@@ -81,6 +81,7 @@ TokenizedProgram tokenize(s8 s) {
   memset(program.lines, 0, (size_t)program_size * sizeof(Line));
   s8 t;
   t.len = 0;
+  t.str = malloc(sizeof(u8) * MAX_IDENT_LEN);
 
   int i = 0;
   for (; i < s.len; i++) {
@@ -129,6 +130,8 @@ TokenizedProgram tokenize(s8 s) {
 
         /* reset token*/
         t.len = 0;
+        t.str = malloc(sizeof(u8) * MAX_IDENT_LEN);
+
         memset(t.str, 0, sizeof(char) * MAX_IDENT_LEN);
         break;
       default:
