@@ -32,7 +32,7 @@ typedef struct ResultInt {
 } ResultInt;
 
 typedef struct MapNode {
-  long hash;
+  u64 hash;
   int val;
   s8 key;
   struct MapNode* next;
@@ -44,7 +44,7 @@ typedef struct Map {
   int count;
 } Map;
 
-long s8_hash(s8 key);
+i64 s8_hash(s8 key);
 s8 s8_from(AllocFn alloc, const char* s);
 bool s8_eq(s8 s1, s8 s2);
 
@@ -53,9 +53,5 @@ Map map_set(AllocFn alloc, Map m, s8 key, int val);
 ResultInt map_get(Map m, s8 key);
 void map_destroy(FreeFn free, Map map);
 
-MapNode* map_node_init(AllocFn alloc,
-                       s8 key,
-                       int val,
-                       long hash,
-                       MapNode* next);
+MapNode* map_node_init(AllocFn alloc, s8 key, int val, u64 hash, MapNode* next);
 #endif

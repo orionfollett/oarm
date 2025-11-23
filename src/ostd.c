@@ -59,7 +59,7 @@ s8 s8_from(AllocFn alloc, const char* s) {
 MapNode* map_node_init(AllocFn alloc,
                        s8 key,
                        int val,
-                       long hash,
+                       u64 hash,
                        MapNode* next) {
   s8 key_copy;
   key_copy.len = key.len;
@@ -78,7 +78,7 @@ Map map_set(AllocFn alloc, Map m, s8 key, int val) {
   if (m.count >> 1 > m.size) {
     /* TODO: rebalance if m count is greater than half the size */
   }
-  long hash = s8_hash(key);
+  u64 hash = s8_hash(key);
   int index = (int)(hash & (m.size - 1));
 
   MapNode* curr = m.buckets[index];
@@ -105,7 +105,7 @@ Map map_set(AllocFn alloc, Map m, s8 key, int val) {
 }
 
 ResultInt map_get(Map m, s8 key) {
-  long hash = s8_hash(key);
+  u64 hash = s8_hash(key);
   int index = (int)(hash & (m.size - 1));
   ResultInt r;
   r.found = false;

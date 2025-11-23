@@ -26,7 +26,7 @@ int entry(int argc, char** argv) {
    * allocating memory. Whatever though, don't run the assembler while editing
    * the file.*/
   fseek(input_stream, 0, SEEK_END);
-  long fsize = ftell(input_stream);
+  i64 fsize = ftell(input_stream);
   fseek(input_stream, 0, SEEK_SET);
   char* program = malloc((u64)(fsize + 1));
   fread(program, (u64)fsize, 1, input_stream);
