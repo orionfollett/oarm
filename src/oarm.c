@@ -100,6 +100,9 @@ TokenizedProgram tokenize(s8 s) {
       case '\0':
       case EOF:
       case '\n':
+        if (is_token_empty && num_tokens == 0) {
+          break;
+        }
         program.len++;
         if (program.len == program_size) {
           int old_program_size = program_size;
