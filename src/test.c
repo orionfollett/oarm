@@ -97,7 +97,7 @@ void test_ostd_map(void) {
   }
 
   ResultInt r2 = map_get(m, s8_from(malloc, "notfound"));
-  if (!assert(r2.found)) {
+  if (assert(r2.found)) {
     printf("Expected not to find string notfound");
   }
 }
