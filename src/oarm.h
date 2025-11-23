@@ -60,6 +60,7 @@ typedef enum {
   BEQ,
   BNE,
   RPC,
+  CMP,
   UNKNOWN
 } CMD;
 typedef int Register;
@@ -118,6 +119,7 @@ State str(State s, Line line);
 State add_or_sub(State s, Line line, bool is_add);
 State branch(State s, Line line, CMD command);
 State lsl_or_lsr(State s, Line line, bool is_left);
+State cmp(State s, Line line);
 
 bool validate_args(Args args, ArgValidations validations);
 void log_registers(State s);

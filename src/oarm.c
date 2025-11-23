@@ -223,8 +223,9 @@ State tick(State s, Line line) {
     case RPC:
       printf("pc: %i\n", s.pc);
       break;
+    case CMP:
+      s = cmp(s, line);
     case UNKNOWN:
-
       printf("Error could not parse statement identifier: %c%c%c\n", t.str[0],
              t.str[1], t.str[2]);
       break;
@@ -292,6 +293,9 @@ CMD identify_cmd(s8 t) {
       break;
     case ('r' << 16) | ('p' << 8) | 'c':
       return RPC;
+      break;
+    case ('c' << 16) | ('m' << 8) | 'p':
+      return CMP;
       break;
   }
   return UNKNOWN;
@@ -626,6 +630,38 @@ State lsl_or_lsr(State s, Line line, bool is_left) {
     s.registers[a1.reg] = val2 << val1;
   } else {
     s.registers[a1.reg] = val2 >> val1;
+  }
+  return s;
+}
+
+State cmp(State s, Line line) {
+  Args args = parse_args(line);
+  if (!args.is_valid) {
+    s.cont = false;
+    return s;
+  }
+
+  ArgValidations v;
+  v.expected_arg_count = 2;
+  v.cmd_pretty_str = "cmp";
+  ArgValidation a1;
+  a1.expected_arg_type = REGISTER_OR_CONSTANT;
+  ArgValidation a2;
+  a2.expected_arg_type = REGISTER_OR_CONSTANT;
+
+  if (!validate_args(args, v)) {
+    s.cont = false;
+    return s;
+  }
+
+  int val1 = get_register_or_constant(s, args.args[0]);
+  int val2 = get_register_or_constant(s, args.args[1]);
+  if (val1 < val2) {
+    s.cmp = -1;
+  } else if (val1 > val2) {
+    s.cmp = 1;
+  } else {
+    s.cmp = 0;
   }
   return s;
 }
