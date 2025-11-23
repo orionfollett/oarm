@@ -107,7 +107,7 @@ void test_ostd_map(void) {
   }
 
   ResultInt r2 = map_get(m, s8_from(malloc, "notok"));
-  if (assert(r2.ok)) {
+  if (!assert(!r2.ok)) {
     printf("Expected not to find string notok");
   }
   ResultInt r3 = map_get(m, s8_from(malloc, "orion"));
@@ -203,8 +203,7 @@ void test_all_branches(void) {
 bool assert(bool cond) {
   if (cond) {
     putchar('.');
-  }
-  else {
+  } else {
     putchar('!');
   }
   return cond;
