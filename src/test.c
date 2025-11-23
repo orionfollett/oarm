@@ -18,33 +18,32 @@ int main(void) {
 
 void test_parse_int(void) {
   printf("\ntest_parse_int\n");
-  int n = parse_int("123", 3);
+  int n = parse_int(s8_from(malloc, "123")).val;
   if (!assert(123 == n)) {
     printf("test_part_int: expected 123 got %i", n);
   }
 
-  n = parse_int("0", 1);
+  n = parse_int(s8_from(malloc, "0")).val;
   if (!assert(0 == n)) {
     printf("test_part_int: expected 0 got %i", n);
   }
 
-  n = parse_int("2", 1);
+  n = parse_int(s8_from(malloc, "2")).val;
   if (!assert(2 == n)) {
     printf("test_part_int: expected 2 got %i", n);
   }
 
-  char c[4] = {'1', '2', '3', '4'};
-  n = parse_int((const char*)c, 4);
+  n = parse_int(s8_from(malloc, "1234")).val;
   if (!assert(1234 == n)) {
     printf("test_part_int: expected 1234 got %i", n);
   }
 
-  n = parse_int("-3", 2);
+  n = parse_int(s8_from(malloc, "-3")).val;
   if (!assert(-3 == n)) {
     printf("test_part_int: expected -3 got %i", n);
   }
 
-  n = parse_int("-765", 4);
+  n = parse_int(s8_from(malloc, "-765")).val;
   if (!assert(-765 == n)) {
     printf("test_part_int: expected -765 got %i", n);
   }

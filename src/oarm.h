@@ -104,7 +104,7 @@ typedef struct ArgValidations {
 } ArgValidations;
 
 State tick(State s, Line line);
-CMD identify_cmd(Token t);
+CMD identify_cmd(s8 t);
 
 Args parse_args(Line line);
 ResultInt parse_int(s8 s);

@@ -350,9 +350,8 @@ Args parse_args(Line line) {
     /*Label argument*/
     if (t.str[t.len - 1] == ':') {
       a.tag = LABEL_ARG;
-      s8 num = s8_from_arr(malloc, t.str, t.len);
-      num.len = t.len - 1;
-      ResultInt r = parse_int(num);
+      t.len = t.len - 1;
+      ResultInt r = parse_int(t);
       if (!r.ok) {
         args.is_valid = false;
         return args;
@@ -375,9 +374,9 @@ Args parse_args(Line line) {
         return args;
       }
 
-      const char* num_start = (const char*)t.str + 2;
-      int num_len = t.len - 3;
-      if (num_len < 1) {
+      t.str = t.str + 2;
+      t.len = t.len - 3;
+      if (t.len < 1) {
         printf(
             "Argument %i, expected numerical value for memory "
             "address argument, got empty string.\n",
@@ -385,7 +384,12 @@ Args parse_args(Line line) {
         args.is_valid = false;
         return args;
       }
-      a.addr.val = parse_int((const char*)num_start, num_len);
+      ResultInt r = parse_int(t);
+      if (!r.ok) {
+        args.is_valid = false;
+        return args;
+      }
+      a.addr.val = r.val;
 
       if (a.addr.type == A_CONSTANT) {
         if (a.addr.val > MEM_BYTES || a.addr.val < 0) {
@@ -401,7 +405,14 @@ Args parse_args(Line line) {
     /*Register argument*/
     else if (t.str[0] == 'x') {
       a.tag = REGISTER;
-      a.reg = parse_int(t.str + 1, t.len - 1);
+      t.str += 1;
+      t.len -= 1;
+      ResultInt r = parse_int(t);
+      if (!r.ok) {
+        args.is_valid = false;
+        return args;
+      }
+      a.reg = r.val;
       if (a.reg > NUM_REGISTERS || a.reg < 0) {
         printf(
             "Argument %i register is out of range, must be between 0 and "
@@ -414,7 +425,14 @@ Args parse_args(Line line) {
       /*constant argument*/
     } else if (t.str[0] == '#') {
       a.tag = CONSTANT;
-      a.constant = parse_int(t.str + 1, t.len - 1);
+      t.str++;
+      t.len--;
+      ResultInt r = parse_int(t);
+      if (!r.ok) {
+        args.is_valid = false;
+        return args;
+      }
+      a.constant = r.val;
     } else {
       args.is_valid = false;
       printf(
