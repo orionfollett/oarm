@@ -156,6 +156,7 @@ Map resolve_labels(TokenizedProgram p) {
     if (line.len == 1) {
       s8 t = line.tokens[0];
       if (t.len > 0 && ':' == t.str[t.len - 1]) {
+        t.len--;
         labels = map_set(malloc, labels, t, ln);
       }
     }
