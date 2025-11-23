@@ -173,12 +173,15 @@ void test_e2e_lsl_lsr(void) {
 void test_all_branches(void) {
   printf("\ntest_all_branches\n");
 
-  int num_branches = 4;
+  int num_branches = 7;
   char* file_names[num_branches];
   file_names[0] = (char*)"asm/e2e/b.s";
   file_names[1] = (char*)"asm/e2e/beq.s";
   file_names[2] = (char*)"asm/e2e/bne.s";
   file_names[3] = (char*)"asm/e2e/bgt.s";
+  file_names[4] = (char*)"asm/e2e/bge.s";
+  file_names[5] = (char*)"asm/e2e/ble.s";
+  file_names[6] = (char*)"asm/e2e/blt.s";
 
   int i = 0;
   for (; i < num_branches; i++) {
@@ -199,7 +202,10 @@ void test_all_branches(void) {
 
 bool assert(bool cond) {
   if (cond) {
-    printf(".");
+    putchar('.');
+  }
+  else {
+    putchar('!');
   }
   return cond;
 }
