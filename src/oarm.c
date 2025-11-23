@@ -60,8 +60,8 @@ ResultState entry(int argc, char** argv) {
     }
   }
 
-  free(program_tokens.lines);
-  s8_destroy(free, program);
+  /*This is a short lived program, so I purposefully am not freeing anything.
+   * The OS can do that for me.*/
   r.return_val = 0;
   r.state = s;
   return r;

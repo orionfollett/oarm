@@ -44,10 +44,13 @@ a database?
 
 
 TODO:
-- write some end to end tests that take small assembly programs and assert their output is correct
+- register labels
 - port over my assembly programs:
     - sort
     - fibonacci seq generator
 - teach Kate assembly, implement:
     - find min in list of numbers in memory
     - sort numbers in list of numbers in memory
+
+- resize and rebalance the hash map
+- allow identifiers to be arbitrarily large
