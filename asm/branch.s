@@ -1,7 +1,13 @@
-b 3:
+b b1
+
+b2:
 mov x0, #0
 add x0, x0, #1
-b 100:
+b exit
+
+b1:
 reg
 rpc
-b -4:
+
+b b2
+exit:
