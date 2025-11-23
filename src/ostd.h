@@ -44,7 +44,7 @@ typedef struct Map {
   int count;
 } Map;
 
-i64 s8_hash(s8 key);
+u64 s8_hash(s8 key);
 s8 s8_from(AllocFn alloc, const char* s);
 bool s8_eq(s8 s1, s8 s2);
 

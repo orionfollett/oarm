@@ -20,8 +20,8 @@ u64 s8_hash(s8 key) {
   const u64 fnv_prime = 1099511628211ull;
 
   u64 h = fnv_offset_basis;
-
-  for (int i = 0; i < key.len; i++) {
+  int i = 0;
+  for (; i < key.len; i++) {
     h ^= (unsigned short)key.str[i];
     h *= fnv_prime;
   }
@@ -79,7 +79,7 @@ Map map_set(AllocFn alloc, Map m, s8 key, int val) {
     /* TODO: rebalance if m count is greater than half the size */
   }
   u64 hash = s8_hash(key);
-  int index = (int)(hash & (m.size - 1));
+  int index = (int)(hash & (u64)(m.size - 1));
 
   MapNode* curr = m.buckets[index];
   if (curr == 0) {
@@ -106,7 +106,7 @@ Map map_set(AllocFn alloc, Map m, s8 key, int val) {
 
 ResultInt map_get(Map m, s8 key) {
   u64 hash = s8_hash(key);
-  int index = (int)(hash & (m.size - 1));
+  int index = (int)(hash & ((u64)m.size - 1));
   ResultInt r;
   r.found = false;
   r.val = 0;
