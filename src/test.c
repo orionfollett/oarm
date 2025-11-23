@@ -6,7 +6,7 @@ void test_parse_int(void);
 void test_tokenize(void);
 void test_resolve_labels(void);
 void test_ostd_map(void);
-void test_e2e_add(void);
+void test_e2e_add_sub(void);
 void test_e2e_ldr_str(void);
 
 int main(void) {
@@ -14,7 +14,7 @@ int main(void) {
   test_parse_int();
   test_tokenize();
   test_ostd_map();
-  test_e2e_add();
+  test_e2e_add_sub();
   test_e2e_ldr_str();
   printf("\nend tests.\n");
 }
@@ -119,24 +119,24 @@ void test_ostd_map(void) {
   }
 }
 
-void test_e2e_add(void) {
-  printf("\test_e2e_add\n");
+void test_e2e_add_sub(void) {
+  printf("\ntest_e2e_add_sub\n");
 
   char* argv[2];
-  argv[1] = "asm/e2e/add.s";
+  argv[1] = "asm/e2e/add_sub.s";
   ResultState rs = entry(2, (char**)&argv);
 
   if (!assert(rs.return_val == 0)) {
-    printf("expected add.s to return successful, got %i\n", rs.return_val);
+    printf("expected add_sub.s to return successful, got %i\n", rs.return_val);
   }
   if (!assert(rs.state.registers[0] == 3)) {
-    printf("expected add.s to have 3 in its first register, got %i\n",
+    printf("expected add_sub.s to have 3 in its first register, got %i\n",
            rs.state.registers[0]);
   }
 }
 
 void test_e2e_ldr_str(void) {
-  printf("\test_e2e_ldr_str\n");
+  printf("\ntest_e2e_ldr_str\n");
 
   char* argv[2];
   argv[1] = "asm/e2e/ldr_str.s";
