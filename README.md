@@ -38,3 +38,16 @@ run asm/all.s
 
 Next project...
 A compiler that generates my OARM asm from a simpler high level language? (use zig?)
+
+an embedded LED/OLED/eink display i can send images to it to render?
+a database?
+
+
+TODO:
+- write some end to end tests that take small assembly programs and assert their output is correct
+- port over my assembly programs:
+    - sort
+    - fibonacci seq generator
+- teach Kate assembly, implement:
+    - find min in list of numbers in memory
+    - sort numbers in list of numbers in memory

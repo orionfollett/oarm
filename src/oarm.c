@@ -2,21 +2,26 @@
 #include "ostd.h"
 
 #define LOG_VERBOSE
-int entry(int argc, char** argv) {
+ResultState entry(int argc, char** argv) {
   printf("oarm v0.1\n____\n\n");
+  ResultState r;
 
   FILE* input_stream = NULL;
   if (argc <= 1) {
     print_help();
+    r.return_val = 0;
+    return r;
   } else {
     if (strcmp("--help", argv[1]) == 0) {
       print_help();
-      return 0;
+      r.return_val = 0;
+      return r;
     } else {
       input_stream = fopen(argv[1], "r");
       if (input_stream == NULL) {
         perror("Error opening file");
-        return 1;
+        r.return_val = 1;
+        return r;
       }
     }
   }
@@ -57,7 +62,9 @@ int entry(int argc, char** argv) {
 
   free(program_tokens.lines);
   s8_destroy(free, program);
-  return 0;
+  r.return_val = 0;
+  r.state = s;
+  return r;
 }
 
 void print_help(void) {

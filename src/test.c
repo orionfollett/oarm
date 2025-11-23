@@ -6,13 +6,14 @@ void test_parse_int(void);
 void test_tokenize(void);
 void test_resolve_labels(void);
 void test_ostd_map(void);
+void test_e2e(void);
 
 int main(void) {
   printf("oarm test run\n");
   test_parse_int();
   test_tokenize();
-  test_resolve_labels();
   test_ostd_map();
+  test_e2e();
   printf("\nend tests.\n");
 }
 
@@ -54,7 +55,6 @@ void test_tokenize(void) {
 
   TokenizedProgram p = tokenize(
       s8_from(malloc, " mov  x0, #1 \n rpc\n add  x1 , x0, #2\nreg\n"));
-  /*log_tokenized_program(p);*/
 
   if (!assert(4 == p.len)) {
     printf("expected program len of 4 got %i", p.len);
@@ -114,6 +114,22 @@ void test_ostd_map(void) {
 
   if (!assert(m.count == 7)) {
     printf("expected m count to be 7 got %i", m.count);
+  }
+}
+
+void test_e2e(void) {
+  printf("\ntest_e2e\n");
+
+  char* argv[2];
+  argv[1] = "asm/e2e/add.s";
+  ResultState rs = entry(2, (char**)&argv);
+
+  if (!assert(rs.return_val == 0)) {
+    printf("expected add.s to return successful, got %i\n", rs.return_val);
+  }
+  if (!assert(rs.state.registers[0] == 3)) {
+    printf("expected add.s to have 3 in its first register, got %i\n",
+           rs.state.registers[0]);
   }
 }
 
