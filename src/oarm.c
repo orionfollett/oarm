@@ -225,8 +225,9 @@ State tick(State s, Line line) {
       break;
     case CMP:
       s = cmp(s, line);
+      break;
     case RCB:
-      printf("cmp: %i", s.cmp);
+      printf("cmp: %i\n", s.cmp);
       break;
     case UNKNOWN:
       printf("Error could not parse statement identifier: %c%c%c\n", t.str[0],
@@ -635,6 +636,8 @@ State cmp(State s, Line line) {
   a1.expected_arg_type = REGISTER_OR_CONSTANT;
   ArgValidation a2;
   a2.expected_arg_type = REGISTER_OR_CONSTANT;
+  v.validations[0] = a1;
+  v.validations[1] = a2;
 
   if (!validate_args(args, v)) {
     s.cont = false;
