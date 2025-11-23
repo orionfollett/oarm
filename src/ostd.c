@@ -1,20 +1,5 @@
 #include "ostd.h"
 
-Map map_init(AllocFn alloc, u64 size_log_2) {
-  int size = 1;
-  u64 i = 0;
-  for (; i < size_log_2; i++) {
-    size = size * 2;
-  }
-  Map m;
-  u64 byte_size = (u64)size * sizeof(MapNode);
-  m.buckets = alloc(byte_size);
-  m.count = 0;
-  m.size = size;
-  memset(m.buckets, 0, byte_size);
-  return m;
-}
-
 u64 s8_hash(s8 key) {
   const u64 fnv_offset_basis = 1469598103934665603ull;
   const u64 fnv_prime = 1099511628211ull;
@@ -54,6 +39,21 @@ s8 s8_from(AllocFn alloc, const char* s) {
   r.str = alloc(sizeof(char) * (u64)r.len);
   memcpy(r.str, s, sizeof(char) * (u64)r.len);
   return r;
+}
+
+Map map_init(AllocFn alloc, u64 size_log_2) {
+  int size = 1;
+  u64 i = 0;
+  for (; i < size_log_2; i++) {
+    size = size * 2;
+  }
+  Map m;
+  u64 byte_size = (u64)size * sizeof(MapNode);
+  m.buckets = alloc(byte_size);
+  m.count = 0;
+  m.size = size;
+  memset(m.buckets, 0, byte_size);
+  return m;
 }
 
 MapNode* map_node_init(AllocFn alloc,
