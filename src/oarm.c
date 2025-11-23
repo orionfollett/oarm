@@ -79,7 +79,7 @@ TokenizedProgram tokenize(s8 s) {
   program.len = 0;
   program.lines = (Line*)malloc((size_t)program_size * sizeof(Line));
   memset(program.lines, 0, (size_t)program_size * sizeof(Line));
-  Token t;
+  s8 t;
   t.len = 0;
 
   int i = 0;
@@ -120,7 +120,7 @@ TokenizedProgram tokenize(s8 s) {
                    MAX_IDENT_LEN);
             break;
           }
-          t.tok[t.len] = c;
+          t.str[t.len] = c;
           t.len++;
         }
         /*Push token onto program struct.*/
@@ -129,7 +129,7 @@ TokenizedProgram tokenize(s8 s) {
 
         /* reset token*/
         t.len = 0;
-        memset(t.tok, 0, sizeof(char) * MAX_IDENT_LEN);
+        memset(t.str, 0, sizeof(char) * MAX_IDENT_LEN);
         break;
       default:
         if (t.len >= MAX_IDENT_LEN) {
@@ -137,7 +137,7 @@ TokenizedProgram tokenize(s8 s) {
                  MAX_IDENT_LEN);
           break;
         }
-        t.tok[t.len] = c;
+        t.str[t.len] = c;
         t.len++;
     }
   }
@@ -161,8 +161,8 @@ TokenizedProgram resolve_labels(TokenizedProgram p) {
   for (; ln < p.len; ln++) {
     Line line = p.lines[ln];
     if (line.len == 1) {
-      Token t = line.tokens[0];
-      if (t.len > 0 && ':' == t.tok[t.len - 1]) {
+      s8 t = line.tokens[0];
+      if (t.len > 0 && ':' == t.str[t.len - 1]) {
         printf("label declaration found at line %i", ln);
       }
     }
@@ -178,7 +178,7 @@ State tick(State s, Line line) {
     s.cont = false;
     return s;
   }
-  Token t = line.tokens[0];
+  s8 t = line.tokens[0];
   CMD cmd = identify_cmd(t);
   switch (cmd) {
     case ADD:
@@ -227,8 +227,8 @@ State tick(State s, Line line) {
       break;
     case UNKNOWN:
 
-      printf("Error could not parse statement identifier: %c%c%c\n", t.tok[0],
-             t.tok[1], t.tok[2]);
+      printf("Error could not parse statement identifier: %c%c%c\n", t.str[0],
+             t.str[1], t.str[2]);
       break;
     case LABEL_DECL:
       /*Label declarations dont do anything. They can be jumped too.*/
@@ -238,11 +238,11 @@ State tick(State s, Line line) {
   return s;
 }
 
-CMD identify_cmd(Token t) {
-  if (t.tok[t.len - 1] == ':') {
+CMD identify_cmd(s8 t) {
+  if (t.str[t.len - 1] == ':') {
     return LABEL_DECL;
   }
-  int key = (t.tok[0] << 16) | (t.tok[1] << 8) | t.tok[2];
+  int key = (t.str[0] << 16) | (t.str[1] << 8) | t.str[2];
   switch (key) {
     case ('m' << 16) | ('e' << 8) | 'm':
       return MEM;
@@ -308,7 +308,7 @@ ResultInt parse_int(s8 s) {
         "Integer overflow detected in parse int. Max int is 8 digits. "
         "Truncating digits.\n");
     r.ok = false;
-    r.val=0;
+    r.val = 0;
     return r;
   }
 
@@ -344,27 +344,27 @@ Args parse_args(Line line) {
   args.is_valid = true;
   int i = 1;
   for (; i < line.len; i++) {
-    Token t = line.tokens[i];
+    s8 t = line.tokens[i];
     Arg a;
 
     /*Label argument*/
-    if (t.tok[t.len - 1] == ':') {
+    if (t.str[t.len - 1] == ':') {
       a.tag = LABEL_ARG;
-      s8 num = s8_from_arr(malloc, t.tok, t.len);
+      s8 num = s8_from_arr(malloc, t.str, t.len);
       num.len = t.len - 1;
       ResultInt r = parse_int(num);
-      if(!r.ok){
+      if (!r.ok) {
         args.is_valid = false;
         return args;
       }
       a.label = r.val;
     }
     /*Address argument */
-    else if (t.tok[0] == '[') {
+    else if (t.str[0] == '[') {
       a.tag = ADDRESS;
-      if (t.tok[1] == 'x') {
+      if (t.str[1] == 'x') {
         a.addr.type = A_REGISTER;
-      } else if (t.tok[1] == '#') {
+      } else if (t.str[1] == '#') {
         a.addr.type = A_CONSTANT;
       } else {
         printf(
@@ -375,7 +375,7 @@ Args parse_args(Line line) {
         return args;
       }
 
-      const char* num_start = (const char*)t.tok + 2;
+      const char* num_start = (const char*)t.str + 2;
       int num_len = t.len - 3;
       if (num_len < 1) {
         printf(
@@ -399,9 +399,9 @@ Args parse_args(Line line) {
       }
     }
     /*Register argument*/
-    else if (t.tok[0] == 'x') {
+    else if (t.str[0] == 'x') {
       a.tag = REGISTER;
-      a.reg = parse_int(t.tok + 1, t.len - 1);
+      a.reg = parse_int(t.str + 1, t.len - 1);
       if (a.reg > NUM_REGISTERS || a.reg < 0) {
         printf(
             "Argument %i register is out of range, must be between 0 and "
@@ -412,15 +412,15 @@ Args parse_args(Line line) {
       }
 
       /*constant argument*/
-    } else if (t.tok[0] == '#') {
+    } else if (t.str[0] == '#') {
       a.tag = CONSTANT;
-      a.constant = parse_int(t.tok + 1, t.len - 1);
+      a.constant = parse_int(t.str + 1, t.len - 1);
     } else {
       args.is_valid = false;
       printf(
           "Error parsing args, couldn't recognize arg type. tok %i last 3 "
           "chars: %c%c%c\n",
-          i, t.tok[0], t.tok[1], t.tok[2]);
+          i, t.str[0], t.str[1], t.str[2]);
       return args;
     }
     args.args[args.count] = a;
@@ -727,10 +727,10 @@ void log_line(Line line) {
   int i = 0;
   printf("> ");
   for (; i < line.len; i++) {
-    Token t = line.tokens[i];
+    s8 t = line.tokens[i];
     int j = 0;
     for (; j < t.len; j++) {
-      putchar(t.tok[j]);
+      putchar(t.str[j]);
     }
     putchar(' ');
   }
@@ -750,9 +750,9 @@ void log_tokenized_program(TokenizedProgram p) {
     for (; j < line.len; j++) {
       int t = 0;
       putchar(' ');
-      Token token = line.tokens[j];
+      s8 token = line.tokens[j];
       for (; t < token.len; t++) {
-        putchar(token.tok[t]);
+        putchar(token.str[t]);
       }
     }
   }

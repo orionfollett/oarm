@@ -40,7 +40,7 @@ s8 s8_from(AllocFn alloc, const char* s) {
   return r;
 }
 
-s8 s8_from_arr(AllocFn alloc, char* s, int len){
+s8 s8_from_arr(AllocFn alloc, char* s, int len) {
   s8 r;
   r.len = len;
   r.str = alloc(sizeof(char) * (u64)r.len);
