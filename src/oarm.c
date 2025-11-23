@@ -341,14 +341,8 @@ Args parse_args(Line line) {
     s8 t = line.tokens[i];
     Arg a;
 
-    /*Label argument*/
-    if (t.str[t.len - 1] == ':') {
-      a.tag = LABEL_ARG;
-      t.len = t.len - 1;
-      a.label = t;
-    }
     /*Address argument */
-    else if (t.str[0] == '[') {
+    if (t.str[0] == '[') {
       a.tag = ADDRESS;
       if (t.str[1] == 'x') {
         a.addr.type = A_REGISTER;
@@ -422,13 +416,10 @@ Args parse_args(Line line) {
         return args;
       }
       a.constant = r.val;
+      /*label argument*/
     } else {
-      args.is_valid = false;
-      printf(
-          "Error parsing args, couldn't recognize arg type. tok %i last 3 "
-          "chars: %c%c%c\n",
-          i, t.str[0], t.str[1], t.str[2]);
-      return args;
+      a.tag = LABEL_ARG;
+      a.label = t;
     }
     args.args[args.count] = a;
     args.count++;
