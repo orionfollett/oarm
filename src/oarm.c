@@ -28,8 +28,8 @@ int entry(int argc, char** argv) {
   fseek(input_stream, 0, SEEK_END);
   long fsize = ftell(input_stream);
   fseek(input_stream, 0, SEEK_SET);
-  char* program = malloc((unsigned long)(fsize + 1));
-  fread(program, (unsigned long)fsize, 1, input_stream);
+  char* program = malloc((u64)(fsize + 1));
+  fread(program, (u64)fsize, 1, input_stream);
   fclose(input_stream);
   program[fsize] = EOF;
 

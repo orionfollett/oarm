@@ -1,13 +1,13 @@
 #include "ostd.h"
 
-Map map_init(AllocFn alloc, unsigned long size_log_2) {
+Map map_init(AllocFn alloc, u64 size_log_2) {
   int size = 1;
-  int i = 0;
+  u64 i = 0;
   for (; i < size_log_2; i++) {
     size = size * 2;
   }
   Map m;
-  int byte_size = (unsigned long)size * sizeof(MapNode);
+  u64 byte_size = (u64)size * sizeof(MapNode);
   m.buckets = alloc(byte_size);
   m.count = 0;
   m.size = size;
@@ -15,16 +15,17 @@ Map map_init(AllocFn alloc, unsigned long size_log_2) {
   return m;
 }
 
-int s8_hash(s8 key) {
-  int fnv_offset_basis = 2166136261;
-  int fnv_prime = 16777619;
+u64 s8_hash(s8 key) {
+  const u64 fnv_offset_basis = 1469598103934665603ull;
+  const u64 fnv_prime = 1099511628211ull;
 
-  int h = fnv_offset_basis;
-  int i = 0;
-  for (; i < key.len; i++) {
-    h = h * fnv_prime;
-    h = h ^ key.str[i];
+  u64 h = fnv_offset_basis;
+
+  for (int i = 0; i < key.len; i++) {
+    h ^= (unsigned short)key.str[i];
+    h *= fnv_prime;
   }
+
   return h;
 }
 
@@ -50,25 +51,26 @@ s8 s8_from(AllocFn alloc, const char* s) {
     i++;
   }
   r.len = i;
-  r.str = alloc(sizeof(char) * r.len);
-  memcpy(r.str, s, sizeof(char) * r.len);
+  r.str = alloc(sizeof(char) * (u64)r.len);
+  memcpy(r.str, s, sizeof(char) * (u64)r.len);
   return r;
 }
 
 MapNode* map_node_init(AllocFn alloc,
                        s8 key,
                        int val,
-                       int hash,
+                       long hash,
                        MapNode* next) {
   s8 key_copy;
   key_copy.len = key.len;
-  key_copy.str = (char*)alloc(sizeof(char) * key.len);
-  memcpy(key_copy.str, key.str, sizeof(char) * key.len);
+  key_copy.str = (char*)alloc(sizeof(char) * (u64)key.len);
+  memcpy(key_copy.str, key.str, sizeof(char) * (u64)key.len);
 
   MapNode* n = (MapNode*)alloc(sizeof(MapNode));
   n->hash = hash;
   n->key = key_copy;
-  n->next = 0;
+  n->next = next;
+  n->val = val;
   return n;
 }
 
@@ -76,8 +78,8 @@ Map map_set(AllocFn alloc, Map m, s8 key, int val) {
   if (m.count >> 1 > m.size) {
     /* TODO: rebalance if m count is greater than half the size */
   }
-  int hash = s8_hash(key);
-  int index = hash & (m.size - 1);
+  long hash = s8_hash(key);
+  int index = (int)(hash & (m.size - 1));
 
   MapNode* curr = m.buckets[index];
   if (curr == 0) {
@@ -103,8 +105,8 @@ Map map_set(AllocFn alloc, Map m, s8 key, int val) {
 }
 
 ResultInt map_get(Map m, s8 key) {
-  int hash = s8_hash(key);
-  int index = hash & (m.size - 1);
+  long hash = s8_hash(key);
+  int index = (int)(hash & (m.size - 1));
   ResultInt r;
   r.found = false;
   r.val = 0;
@@ -120,4 +122,8 @@ ResultInt map_get(Map m, s8 key) {
   return r;
 }
 
-void map_destroy(FreeFn free, Map map) {}
+void map_destroy(FreeFn free, Map map) {
+  /*iterate through all the buckets and free all the strings too before freeing
+   * the buckets buffer.*/
+  free(map.buckets);
+}
