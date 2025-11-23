@@ -270,6 +270,8 @@ CMD identify_cmd(s8 t) {
       return LSR;
     case ('s' << 16) | ('u' << 8) | 'b':
       return SUB;
+    case ('l' << 16) | ('d' << 8) | 'r':
+      return LDR;
     case ('s' << 16) | ('t' << 8) | 'r':
       return STR;
     case ('b' << 16) | ('e' << 8) | 'q':
