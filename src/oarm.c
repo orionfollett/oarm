@@ -17,8 +17,7 @@ ResultState entry(int argc, char** argv) {
       print_help();
       r.return_val = 0;
       return r;
-    }
-    else if(s8_eq(s8_from(malloc, "--docs"), arg1)){
+    } else if (s8_eq(s8_from(malloc, "--docs"), arg1)) {
       print_docs();
       r.return_val = 0;
       return r;
@@ -86,32 +85,54 @@ void print_help(void) {
       "  --docs              Show documentation\n");
 }
 
-void print_docs(void){
+void print_docs(void) {
   printf(
-    "oarm (Orion's subset of ARM assembly) documentation\n"
-    "\n"
-    "Registers + Memory:\n"
-    "  mov \n"
-    "  ldr \n"
-    "  str \n"
-    "\n"
-    "Arithmetic:\n"
-    "  add \n"
-    "  sub \n"
-    "  lsl \n"
-    "  lsr \n"
-    "\n"
-    "Branches:\n"
-    "  b\n"
-    "  beq\n"
-    "  bne\n"
-    "  blt\n"
-    "  ble\n"
-    "  bgt\n"
-    "  bge\n"
-    "\n"
-    ""
-  );
+      "oarm (Orion's subset of ARM assembly) documentation\n"
+      "\n"
+      "Arguments:\n"
+      "  constant: ex: \'#10\' is the integer 10, \'#-33\' is negative 33\n"
+      "  register: ex: \'x0\' is the first register, \'x9\' is the last "
+      "register\n"
+      "  memory address: ex: \'[#1]\' is memory address 1, \'[x2]\' is the "
+      "address of the value in register x2\n"
+      "\n"
+      "Debugging:\n"
+      "  reg - print all registers\n"
+      "  mem - print all memory\n"
+      "  rpc - print the program counter\n"
+      "  rcb - print the comparison byte\n"
+      "\n"
+      "Registers + Memory:\n"
+      "  mov - move a constant or register value to a register ex: \'mov x0, "
+      "x0, #1\'\n"
+      "  ldr - load value at memory address into register ex: \'ldr x0, "
+      "[#1]\'\n"
+      "  str - store the value from register into memory ex: \'str x0, [#1]\'\n"
+      "\n"
+      "Arithmetic:\n"
+      "  add - add two register or constant values and store in register ex: "
+      "\'add x0, x0, #1\' increments x0 by 1\n"
+      "  sub - subtract ex: \'sub x0, x0, #1\' decrement x0 by 1\n"
+      "  lsl - bitwise shift left ex: \'lsl x0, x0, #1\' shifts the value in "
+      "x0 left 1\n"
+      "  lsr - bitwise shift right ex: \'lsr x0, x0, #1\' shifts the value in "
+      "x0 right 1\n"
+      "\n"
+      "Branches:\n"
+      "  cmp - compare two register or constant values, sets the sign byte to "
+      "-1, 0, or 1 ex: \'cmp x0, #1\'\n"
+      "  <label name>: - labels are arbitrary strings with a colon ex: "
+      "\'exit:\' declares the exit label\n"
+      "  b - branch (jump) to the label specified ex: \'b exit\' jumps the "
+      "exit label\n"
+      "  beq - branch if equal, jumps if the cmp byte is 0 ex: \'beq exit\'\n"
+      "  bne - branch if not equal\n"
+      "  blt - branch if less than\n"
+      "  ble - branch if less than or equal\n"
+      "  bgt - branch if greater than\n"
+      "  bge - branch if greater than or equal\n"
+      "\n"
+      "");
 }
 
 TokenizedProgram tokenize(s8 s) {
