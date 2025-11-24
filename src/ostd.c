@@ -35,21 +35,21 @@ s8 s8_from(AllocFn alloc, const char* s) {
     i++;
   }
   r.len = i;
-  r.str = alloc(sizeof(char) * (u64)r.len);
-  memcpy(r.str, s, sizeof(char) * (u64)r.len);
+  r.str = alloc((u64)r.len);
+  memcpy(r.str, s, (u64)r.len);
   return r;
 }
 
 const char* s8_to_c(AllocFn alloc, s8 s) {
-  char* n = alloc((u64)(1 + s.len) * sizeof(char));
-  memcpy(n, s.str, (u64)s.len * sizeof(char));
+  char* n = alloc((u64)(1 + s.len));
+  memcpy(n, s.str, (u64)s.len);
   n[s.len] = '\0';
   return (const char*)n;
 }
 
 s8 s8_clone(AllocFn alloc, s8 s) {
   s8 n;
-  n.str = alloc(sizeof(char) * (u64)s.len);
+  n.str = alloc((u64)s.len);
   n.len = s.len;
   return n;
 }
@@ -83,32 +83,28 @@ s8 s8_replace_all(AllocFn alloc,
   int* match_list = alloc(((u64)(dest.len / target.len) + 1) * sizeof(int));
   int match_count = 0;
   int i = 0;
-  int equal_count = 0;
   for (; i < (dest.len - target.len) + 1; i++) {
-    if (dest.str[i] == target.str[equal_count]) {
-      equal_count++;
-      if (equal_count == target.len) {
-        match_list[match_count] = (i - target.len) + 1;
-        match_count++;
-        equal_count = 0;
-      }
+    if (memcmp(dest.str + i, target.str, (u64)target.len) == 0) {
+      match_list[match_count] = i;
+      match_count++;
+      i = i + target.len - 1;
     }
   }
 
   /*calculate size needed, allocate it*/
   s8 new_str;
   new_str.len = (replacement.len - target.len) * match_count + dest.len;
-  new_str.str = (char*)alloc((u64)new_str.len * sizeof(char));
+  new_str.str = (char*)alloc((u64)new_str.len);
 
-  /*write the new string in*/
+  /*write the new string in`*/
   int new_i = 0;
   int dest_i = 0;
   int match_i = 0;
+
   while (new_i < new_str.len) {
     /*copy replacement in*/
     if (match_i < match_count && match_list[match_i] == dest_i) {
-      memcpy(new_str.str + (sizeof(char) * (u64)new_i), replacement.str,
-             (u64)replacement.len * sizeof(char));
+      memcpy(new_str.str + ((u64)new_i), replacement.str, (u64)replacement.len);
       dest_i += target.len;
       new_i += replacement.len;
       match_i++;
@@ -150,8 +146,8 @@ MapNode* map_node_init(AllocFn alloc,
                        MapNode* next) {
   s8 key_copy;
   key_copy.len = key.len;
-  key_copy.str = (char*)alloc(sizeof(char) * (u64)key.len);
-  memcpy(key_copy.str, key.str, sizeof(char) * (u64)key.len);
+  key_copy.str = (char*)alloc((u64)key.len);
+  memcpy(key_copy.str, key.str, (u64)key.len);
 
   MapNode* n = (MapNode*)alloc(sizeof(MapNode));
   n->hash = hash;
