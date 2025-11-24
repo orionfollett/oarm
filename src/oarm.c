@@ -43,7 +43,7 @@ ResultState entry(int argc, char** argv) {
   fread(program.str, (u64)fsize, 1, input_stream);
   fclose(input_stream);
   program.str[fsize] = EOF;
-  program.len = (int)fsize;
+  program.len = (int)fsize + 1;
 
   TokenizedProgram program_tokens = tokenize(program);
 
@@ -162,6 +162,7 @@ TokenizedProgram tokenize(s8 s) {
           i, MAX_TOKENS_PER_LINE);
       break;
     }
+
     switch (c) {
       case '\0':
       case EOF:
