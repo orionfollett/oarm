@@ -9,5 +9,4 @@ str i, [i]
 add i, i, #1
 cmp i, max
 blt loop
-mem
 ret
