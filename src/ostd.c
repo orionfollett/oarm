@@ -105,18 +105,6 @@ s8 s8_replace_all(AllocFn alloc,
   int dest_i = 0;
   int match_i = 0;
   while (new_i < new_str.len) {
-    /*
-    we are either copying from dest, or copying from replacement
-
-    when copying from replacement, we do the whole thing, then increment
-    dest_i by target len and new_i by replacement len
-
-
-    when copying from dest, we do one char at a time,
-    each cycle we incr dest_i and new_i,
-    if we hit an index in occurences, then we swap to copying replacement state.
-
-    */
     /*copy replacement in*/
     if (match_i < match_count && match_list[match_i] == dest_i) {
       memcpy(new_str.str + (sizeof(char) * (u64)new_i), replacement.str,
@@ -124,7 +112,9 @@ s8 s8_replace_all(AllocFn alloc,
       dest_i += target.len;
       new_i += replacement.len;
       match_i++;
-    } else {
+    }
+    /* write from original string */
+    else {
       new_str.str[new_i] = dest.str[dest_i];
       dest_i++;
       new_i++;
