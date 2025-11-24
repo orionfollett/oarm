@@ -54,7 +54,11 @@ s8 s8_clone(AllocFn alloc, s8 s) {
   return n;
 }
 
-s8 s8_replace_all(AllocFn alloc, s8 dest, s8 target, s8 replacement) {
+s8 s8_replace_all(AllocFn alloc,
+                  FreeFn free,
+                  s8 dest,
+                  s8 target,
+                  s8 replacement) {
   /*for all occurences of target in dest, replace with replacement returns a new
    * copy and does not modify any args.*/
   if (dest.len < target.len) {
@@ -115,7 +119,7 @@ s8 s8_replace_all(AllocFn alloc, s8 dest, s8 target, s8 replacement) {
     */
     /*copy replacement in*/
     if (match_i < match_count && match_list[match_i] == dest_i) {
-      memcpy(new_str.str + (sizeof(char) * new_i), replacement.str,
+      memcpy(new_str.str + (sizeof(char) * (u64)new_i), replacement.str,
              (u64)replacement.len * sizeof(char));
       dest_i += target.len;
       new_i += replacement.len;
@@ -127,6 +131,7 @@ s8 s8_replace_all(AllocFn alloc, s8 dest, s8 target, s8 replacement) {
     }
   }
   free(match_list);
+  return new_str;
 }
 
 void s8_destroy(FreeFn free, s8 s) {

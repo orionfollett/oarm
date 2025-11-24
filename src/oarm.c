@@ -241,12 +241,12 @@ Map resolve_register_labels(TokenizedProgram p) {
    * register they point too.*/
 
   Map register_labels = map_init(malloc, 10);
-  s8 reg_str = s8_from(malloc, ".reg");
+  s8 reg_keyword = s8_from(malloc, ".reg");
   int ln = 0;
   for (; ln < p.len; ln++) {
     Line line = p.lines[ln];
     bool is_register_label_decl =
-        line.len == 3 && s8_eq(line.tokens[0], reg_str);
+        line.len == 3 && s8_eq(line.tokens[0], reg_keyword);
     if (is_register_label_decl) {
       s8 reg_str;
       reg_str.str = line.tokens[2].str + 1;

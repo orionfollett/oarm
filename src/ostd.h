@@ -49,6 +49,12 @@ s8 s8_from(AllocFn alloc, const char* s);
 const char* s8_to_c(AllocFn alloc, s8 s);
 bool s8_eq(s8 s1, s8 s2);
 void s8_destroy(FreeFn free, s8 s);
+s8 s8_clone(AllocFn alloc, s8 s);
+s8 s8_replace_all(AllocFn alloc,
+                  FreeFn free,
+                  s8 dest,
+                  s8 target,
+                  s8 replacement);
 
 Map map_init(AllocFn alloc, u64 size_log_2);
 Map map_set(AllocFn alloc, Map m, s8 key, int val);

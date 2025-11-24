@@ -10,6 +10,7 @@ void test_e2e_add_sub(void);
 void test_e2e_ldr_str(void);
 void test_e2e_lsl_lsr(void);
 void test_all_branches(void);
+void test_s8_replace_all(void);
 
 int main(void) {
   printf("oarm test run\n");
@@ -20,6 +21,7 @@ int main(void) {
   test_e2e_ldr_str();
   test_e2e_lsl_lsr();
   test_all_branches();
+  test_s8_replace_all();
   printf("\nend tests.\n");
 }
 
@@ -197,6 +199,23 @@ void test_all_branches(void) {
       printf("expected %s to have 1 in its first register, got %i\n", fn,
              rs.state.registers[0]);
     }
+  }
+}
+
+void test_s8_replace_all(void) {
+  printf("\ntest_s8_replace_all\n");
+
+  s8 r1 = s8_replace_all(malloc, free, s8_from(malloc, "batcatcat"),
+                         s8_from(malloc, "cat"), s8_from(malloc, "hello"));
+  if (!assert(s8_eq(r1, s8_from(malloc, "bathellohello")))) {
+    printf("expected bathellohello from replace all but got %s\n",
+           s8_to_c(malloc, r1));
+  }
+
+  s8 r2 = s8_replace_all(malloc, free, s8_from(malloc, "batcatcat"),
+                         s8_from(malloc, "cat"), s8_from(malloc, "b"));
+  if (!assert(s8_eq(r2, s8_from(malloc, "batbb")))) {
+    printf("expected batbb from replace all but got %s", s8_to_c(malloc, r2));
   }
 }
 
