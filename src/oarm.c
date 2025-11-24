@@ -112,11 +112,10 @@ void print_docs(void) {
       "Arithmetic:\n"
       "  add - add two register or constant values and store in register ex: "
       "\'add x0, x0, #1\' increments x0 by 1\n"
-      "  sub - subtract ex: \'sub x0, x0, #1\' decrement x0 by 1\n"
+      "  sub - subtract\n"
       "  lsl - bitwise shift left ex: \'lsl x0, x0, #1\' shifts the value in "
       "x0 left 1\n"
-      "  lsr - bitwise shift right ex: \'lsr x0, x0, #1\' shifts the value in "
-      "x0 right 1\n"
+      "  lsr - bitwise shift right\n"
       "\n"
       "Branches:\n"
       "  cmp - compare two register or constant values, sets the sign byte to "
@@ -132,6 +131,10 @@ void print_docs(void) {
       "  bgt - branch if greater than\n"
       "  bge - branch if greater than or equal\n"
       "\n"
+      "Register Labels:\n"
+      "  .reg <label_name> <register> - give pretty name to register ex: "
+      "\'.reg counter x0\' lets you use the word \'counter\' in place of \'x0\'"
+      "\n\n"
       "");
 }
 
