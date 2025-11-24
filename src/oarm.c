@@ -58,6 +58,7 @@ ResultState entry(int argc, char** argv) {
   s.cont = true;
   s.cmp = 0;
   s.labels = resolve_labels(program_tokens);
+  s.register_labels = resolve_register_labels(program_tokens);
   while (s.cont) {
     s = tick(s, program_tokens.lines[s.pc]);
     if (s.pc > program_tokens.len || s.pc < 0) {
@@ -233,6 +234,36 @@ Map resolve_labels(TokenizedProgram p) {
   }
 
   return labels;
+}
+
+Map resolve_register_labels(TokenizedProgram p) {
+  /*Find all register label declarations and replace references to them with the
+   * register they point too.*/
+
+  Map register_labels = map_init(malloc, 10);
+  s8 reg_str = s8_from(malloc, ".reg");
+  int ln = 0;
+  for (; ln < p.len; ln++) {
+    Line line = p.lines[ln];
+    bool is_register_label_decl =
+        line.len == 3 && s8_eq(line.tokens[0], reg_str);
+    if (is_register_label_decl) {
+      s8 reg_str;
+      reg_str.str = line.tokens[2].str + 1;
+      reg_str.len = line.tokens[2].len - 1;
+      ResultInt r = parse_int(reg_str);
+      if (!r.ok) {
+        printf("warning register label failed to parse\n");
+      }
+      register_labels = map_set(malloc, register_labels, line.tokens[1], r.val);
+      continue;
+    }
+    int j = 0;
+    for (; j < line.len; j++) {
+    }
+  }
+
+  return register_labels;
 }
 
 State tick(State s, Line line) {

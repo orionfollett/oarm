@@ -27,6 +27,7 @@ typedef struct State {
   bool cont;
 
   Map labels;
+  Map register_labels;
 } State;
 
 typedef struct ResultState {
@@ -118,6 +119,7 @@ Args parse_args(Line line);
 ResultInt parse_int(s8 s);
 TokenizedProgram tokenize(s8 s);
 Map resolve_labels(TokenizedProgram p);
+Map resolve_register_labels(TokenizedProgram p);
 
 State mov(State s, Line line);
 State ldr(State s, Line line);

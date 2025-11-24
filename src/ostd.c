@@ -47,6 +47,88 @@ const char* s8_to_c(AllocFn alloc, s8 s) {
   return (const char*)n;
 }
 
+s8 s8_clone(AllocFn alloc, s8 s) {
+  s8 n;
+  n.str = alloc(sizeof(char) * (u64)s.len);
+  n.len = s.len;
+  return n;
+}
+
+s8 s8_replace_all(AllocFn alloc, s8 dest, s8 target, s8 replacement) {
+  /*for all occurences of target in dest, replace with replacement returns a new
+   * copy and does not modify any args.*/
+  if (dest.len < target.len) {
+    return s8_clone(alloc, dest);
+  }
+
+  /*
+  ex:
+  dest: bacatcat
+  target: cat
+  repl:  hello
+  answer bahellohello
+
+  ex:
+  dest: bacatcat
+  target: cat
+  repl:  c
+  answer: bacc
+  */
+
+  /*find occurences, store where they are*/
+  int* match_list = alloc(((u64)(dest.len / target.len) + 1) * sizeof(int));
+  int match_count = 0;
+  int i = 0;
+  int equal_count = 0;
+  for (; i < (dest.len - target.len) + 1; i++) {
+    if (dest.str[i] == target.str[equal_count]) {
+      equal_count++;
+      if (equal_count == target.len) {
+        match_list[match_count] = (i - target.len) + 1;
+        match_count++;
+        equal_count = 0;
+      }
+    }
+  }
+
+  /*calculate size needed, allocate it*/
+  s8 new_str;
+  new_str.len = (replacement.len - target.len) * match_count + dest.len;
+  new_str.str = (char*)alloc((u64)new_str.len * sizeof(char));
+
+  /*write the new string in*/
+  int new_i = 0;
+  int dest_i = 0;
+  int match_i = 0;
+  while (new_i < new_str.len) {
+    /*
+    we are either copying from dest, or copying from replacement
+
+    when copying from replacement, we do the whole thing, then increment
+    dest_i by target len and new_i by replacement len
+
+
+    when copying from dest, we do one char at a time,
+    each cycle we incr dest_i and new_i,
+    if we hit an index in occurences, then we swap to copying replacement state.
+
+    */
+    /*copy replacement in*/
+    if (match_i < match_count && match_list[match_i] == dest_i) {
+      memcpy(new_str.str + (sizeof(char) * new_i), replacement.str,
+             (u64)replacement.len * sizeof(char));
+      dest_i += target.len;
+      new_i += replacement.len;
+      match_i++;
+    } else {
+      new_str.str[new_i] = dest.str[dest_i];
+      dest_i++;
+      new_i++;
+    }
+  }
+  free(match_list);
+}
+
 void s8_destroy(FreeFn free, s8 s) {
   free(s.str);
 }
