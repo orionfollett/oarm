@@ -260,6 +260,13 @@ Map resolve_register_labels(TokenizedProgram p) {
     }
     int j = 0;
     for (; j < line.len; j++) {
+      /*tokens could only be bare, or wrapped in []*/
+      s8 addr_label = s8_concat(
+          malloc, s8_concat(malloc, s8_from(malloc, "["), line.tokens[j]),
+          s8_from(malloc, "]"));
+      if (s8_eq(line.tokens[j], addr_label)) {
+        printf("addr label found");
+      }
     }
   }
 

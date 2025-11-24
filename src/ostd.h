@@ -55,6 +55,7 @@ s8 s8_replace_all(AllocFn alloc,
                   s8 dest,
                   s8 target,
                   s8 replacement);
+s8 s8_concat(AllocFn alloc, s8 s1, s8 s2);
 
 Map map_init(AllocFn alloc, u64 size_log_2);
 Map map_set(AllocFn alloc, Map m, s8 key, int val);

@@ -11,6 +11,7 @@ void test_e2e_ldr_str(void);
 void test_e2e_lsl_lsr(void);
 void test_all_branches(void);
 void test_s8_replace_all(void);
+void test_s8_concat(void);
 
 int main(void) {
   printf("oarm test run\n");
@@ -22,6 +23,7 @@ int main(void) {
   test_e2e_lsl_lsr();
   test_all_branches();
   test_s8_replace_all();
+  test_s8_concat();
   printf("\nend tests.\n");
 }
 
@@ -216,6 +218,17 @@ void test_s8_replace_all(void) {
                          s8_from(malloc, "cat"), s8_from(malloc, "b"));
   if (!assert(s8_eq(r2, s8_from(malloc, "batbb")))) {
     printf("expected batbb from replace all but got %s", s8_to_c(malloc, r2));
+  }
+}
+
+void test_s8_concat(void) {
+  printf("\ntest_s8_concat\n");
+  s8 r = s8_concat(
+      malloc,
+      s8_concat(malloc, s8_from(malloc, "["), s8_from(malloc, "inside")),
+      s8_from(malloc, "]"));
+  if (!assert(s8_eq(r, s8_from(malloc, "[inside]")))) {
+    printf("expected [inside] from str concat got %s\n", s8_to_c(malloc, r));
   }
 }
 

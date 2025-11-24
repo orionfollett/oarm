@@ -120,6 +120,15 @@ s8 s8_replace_all(AllocFn alloc,
   return new_str;
 }
 
+s8 s8_concat(AllocFn alloc, s8 s1, s8 s2) {
+  s8 n;
+  n.len = s1.len + s2.len;
+  n.str = alloc((u64)n.len);
+  memcpy(n.str, s1.str, (u64)s1.len);
+  memcpy(n.str + s1.len, s2.str, (u64)s2.len);
+  return n;
+}
+
 void s8_destroy(FreeFn free, s8 s) {
   free(s.str);
 }
