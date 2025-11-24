@@ -1,9 +1,14 @@
 #include "oarm.h"
 #include "ostd.h"
 
-#define LOG_VERBOSE
+/*#define LOG_VERBOSE*/
+#define LOG_NONE
+
 ResultState entry(int argc, char** argv) {
+#ifndef LOG_NONE
   printf("oarm v0.1\n____\n\n");
+#endif
+
   ResultState r;
 
   FILE* input_stream = NULL;
@@ -58,7 +63,7 @@ ResultState entry(int argc, char** argv) {
   s.cont = true;
   s.cmp = 0;
   s.labels = resolve_labels(program_tokens);
-  s.register_labels = resolve_register_labels(program_tokens);
+  program_tokens = resolve_register_labels(program_tokens);
   while (s.cont) {
     s = tick(s, program_tokens.lines[s.pc]);
     if (s.pc > program_tokens.len || s.pc < 0) {
@@ -236,7 +241,7 @@ Map resolve_labels(TokenizedProgram p) {
   return labels;
 }
 
-Map resolve_register_labels(TokenizedProgram p) {
+TokenizedProgram resolve_register_labels(TokenizedProgram p) {
   /*Find all register label declarations and replace references to them with the
    * register they point too.*/
 
@@ -260,22 +265,39 @@ Map resolve_register_labels(TokenizedProgram p) {
     }
     int j = 0;
     for (; j < line.len; j++) {
-      /*tokens could only be bare, or wrapped in []*/
-      s8 addr_label = s8_concat(
-          malloc, s8_concat(malloc, s8_from(malloc, "["), line.tokens[j]),
-          s8_from(malloc, "]"));
-      if (s8_eq(line.tokens[j], addr_label)) {
-        printf("addr label found");
+      /*register label tokens could only be bare, or wrapped in []
+
+      if it starts with square [], strip those before checking map
+      */
+      s8 t = line.tokens[j];
+
+      if (t.len > 2 && t.str[0] == '[') {
+        t.len -= 1;
+        t.str++;
+      }
+
+      ResultInt r = map_get(register_labels, t);
+      if (r.ok) {
+        char ascii_num = (char)(r.val + '0');
+
+        char buf[2];
+        buf[0] = ascii_num;
+        buf[1] = '\0';
+
+        line.tokens[j] =
+            s8_concat(malloc, s8_from(malloc, "x"), s8_from(malloc, buf));
       }
     }
   }
 
-  return register_labels;
+  return p;
 }
 
 State tick(State s, Line line) {
-  /*Evaluate one line of asm.*/
+/*Evaluate one line of asm.*/
+#ifndef LOG_NONE
   log_line(line);
+#endif
   if (line.len < 1) {
     printf("warning:tick: empty line\n");
     s.cont = false;
@@ -338,6 +360,7 @@ State tick(State s, Line line) {
       printf("Error could not parse statement identifier: %c%c%c\n", t.str[0],
              t.str[1], t.str[2]);
       break;
+    case REG_LABEL:
     case LABEL_DECL:
       /*Label declarations dont do anything. They can be jumped too.*/
       break;
@@ -392,6 +415,8 @@ CMD identify_cmd(s8 t) {
       return CMP;
     case ('r' << 16) | ('c' << 8) | 'b':
       return RCB;
+    case ('.' << 16) | ('r' << 8) | 'e':
+      return REG_LABEL;
   }
   return UNKNOWN;
 }
@@ -912,23 +937,34 @@ void log_line(Line line) {
 }
 
 void log_tokenized_program(TokenizedProgram p) {
+#ifndef LOG_NONE
   printf("\n\nTokenized Program:\n");
   printf("Line count: %i\n", p.len);
-
+#endif
   int i = 0;
   for (; i < p.len; i++) {
+#ifndef LOG_NONE
     putchar('\n');
+#endif
     int j = 0;
     Line line = p.lines[i];
+#ifndef LOG_NONE
     printf("%i. (Toks: %i):", i, line.len);
+#endif
     for (; j < line.len; j++) {
       int t = 0;
+#ifndef LOG_NONE
       putchar(' ');
+#endif
       s8 token = line.tokens[j];
       for (; t < token.len; t++) {
+#ifndef LOG_NONE
         putchar(token.str[t]);
+#endif
       }
     }
   }
+#ifndef LOG_NONE
   printf("\n\n");
+#endif
 }

@@ -68,6 +68,7 @@ typedef enum {
   RPC,
   CMP,
   RCB,
+  REG_LABEL,
   UNKNOWN
 } CMD;
 typedef int Register;
@@ -119,7 +120,7 @@ Args parse_args(Line line);
 ResultInt parse_int(s8 s);
 TokenizedProgram tokenize(s8 s);
 Map resolve_labels(TokenizedProgram p);
-Map resolve_register_labels(TokenizedProgram p);
+TokenizedProgram resolve_register_labels(TokenizedProgram p);
 
 State mov(State s, Line line);
 State ldr(State s, Line line);
