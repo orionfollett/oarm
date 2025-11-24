@@ -12,6 +12,7 @@ void test_e2e_lsl_lsr(void);
 void test_all_branches(void);
 void test_s8_replace_all(void);
 void test_s8_concat(void);
+void test_register_labels(void);
 
 int main(void) {
   printf("oarm test run\n");
@@ -24,6 +25,7 @@ int main(void) {
   test_all_branches();
   test_s8_replace_all();
   test_s8_concat();
+  test_register_labels();
   printf("\nend tests.\n");
 }
 
@@ -229,6 +231,22 @@ void test_s8_concat(void) {
       s8_from(malloc, "]"));
   if (!assert(s8_eq(r, s8_from(malloc, "[inside]")))) {
     printf("expected [inside] from str concat got %s\n", s8_to_c(malloc, r));
+  }
+}
+
+void test_register_labels(void) {
+  printf("\ntest_register_labels\n");
+
+  char* fn = "asm/e2e/reg_labels.s";
+  char* argv[2];
+  argv[1] = fn;
+  ResultState rs = entry(2, (char**)&argv);
+  if (!assert(rs.return_val == 0)) {
+    printf("expected %s to return successful, got %i\n", fn, rs.return_val);
+  }
+  if (!assert(rs.state.registers[0] == 99)) {
+    printf("expected %s to have 99 in its first register, got %i\n", fn,
+           rs.state.registers[0]);
   }
 }
 
