@@ -59,8 +59,8 @@ This is a fun, educational project to get a better intuition for basic assembly 
 
 There are two "modules": oarm and ostd. 
 
-1. ostd has my personal standard library. I came into this project with nothing, so I implemented some string utilities and a hash map in there.
-I mostly only implemented functions that I directly needed. For example the hash map has no "pop" or "remove" function since I did not require it.
+1. ostd has my personal standard library. I came into this project with nothing, so I implemented some string utilities and a hash map.
+I mostly only implemented functions that I directly needed. For example the hash map has no "pop" or "remove" function since I didn't require it.
 
 2. oarm has the main application logic. Instructions are executed one at a time, state is copied on each instruction execution. Performance was not a concern as long as it felt reasonable to run very small programs on modern hardware.
 
