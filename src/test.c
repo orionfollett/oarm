@@ -162,7 +162,7 @@ void test_e2e_ldr_str(void) {
 }
 
 void test_e2e_lsl_lsr(void) {
-  printf("\test_e2e_lsl_lsr\n");
+  printf("\ntest_e2e_lsl_lsr\n");
 
   char* argv[2];
   argv[1] = "asm/e2e/lsl_lsr.s";
@@ -244,9 +244,9 @@ void test_register_labels(void) {
   if (!assert(rs.return_val == 0)) {
     printf("expected %s to return successful, got %i\n", fn, rs.return_val);
   }
-  if (!assert(rs.state.registers[0] == 99)) {
-    printf("expected %s to have 99 in its first register, got %i\n", fn,
-           rs.state.registers[0]);
+  if (!assert(rs.state.memory[99] == 99)) {
+    printf("expected %s to have 99 in its 100th mem address, got %i\n", fn,
+           rs.state.memory[99]);
   }
 }
 

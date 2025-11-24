@@ -8,6 +8,6 @@ loop:
 str i, [i]
 add i, i, #1
 cmp i, max
-blt loop:
+blt loop
 mem
 ret

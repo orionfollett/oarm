@@ -1,8 +1,8 @@
 #include "oarm.h"
 #include "ostd.h"
 
-/*#define LOG_VERBOSE*/
-#define LOG_NONE
+#define LOG_VERBOSE
+/*#define LOG_NONE*/
 
 ResultState entry(int argc, char** argv) {
 #ifndef LOG_NONE
@@ -64,6 +64,9 @@ ResultState entry(int argc, char** argv) {
   s.cmp = 0;
   s.labels = resolve_labels(program_tokens);
   program_tokens = resolve_register_labels(program_tokens);
+
+  log_tokenized_program(program_tokens);
+
   while (s.cont) {
     s = tick(s, program_tokens.lines[s.pc]);
     if (s.pc > program_tokens.len || s.pc < 0) {
@@ -244,7 +247,7 @@ Map resolve_labels(TokenizedProgram p) {
 TokenizedProgram resolve_register_labels(TokenizedProgram p) {
   /*Find all register label declarations and replace references to them with the
    * register they point too.*/
-
+  printf("HELLO\n");
   Map register_labels = map_init(malloc, 10);
   s8 reg_keyword = s8_from(malloc, ".reg");
   int ln = 0;
@@ -270,12 +273,12 @@ TokenizedProgram resolve_register_labels(TokenizedProgram p) {
       if it starts with square [], strip those before checking map
       */
       s8 t = line.tokens[j];
-
-      if (t.len > 2 && t.str[0] == '[') {
-        t.len -= 1;
+      bool is_addr = t.len > 2 && t.str[0] == '[';
+      if (is_addr) {
+        t.len -= 2;
         t.str++;
       }
-
+      printf("t: %s\n", s8_to_c(malloc, t));
       ResultInt r = map_get(register_labels, t);
       if (r.ok) {
         char ascii_num = (char)(r.val + '0');
@@ -283,9 +286,17 @@ TokenizedProgram resolve_register_labels(TokenizedProgram p) {
         char buf[2];
         buf[0] = ascii_num;
         buf[1] = '\0';
+        if (is_addr) {
+          line.tokens[j] = s8_concat(
+              malloc,
+              s8_concat(malloc, s8_from(malloc, "[x"), s8_from(malloc, buf)),
+              s8_from(malloc, "]"));
+        } else {
+          line.tokens[j] =
+              s8_concat(malloc, s8_from(malloc, "x"), s8_from(malloc, buf));
+        }
 
-        line.tokens[j] =
-            s8_concat(malloc, s8_from(malloc, "x"), s8_from(malloc, buf));
+        p.lines[ln] = line;
       }
     }
   }
